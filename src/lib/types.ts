@@ -39,6 +39,9 @@ export interface SiteConfig {
   socials: SocialLink[];
   youtube: {
     channelUrl: string;
+    playlistUrl?: string;
+    playlistTitle?: string;
+    playlistId?: string;
     videos: YouTubeVideo[];
   };
   tiktok: {
