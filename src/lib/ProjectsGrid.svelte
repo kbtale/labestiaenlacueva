@@ -12,22 +12,10 @@
 
 <section id="projects" class="py-20 px-6 sm:px-12 border-b border-mono-200 dark:border-mono-800 bg-mono-50/50 dark:bg-mono-900/30">
   <div class="max-w-6xl mx-auto">
-    <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-      <div>
-        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-mono-950 dark:text-mono-50">
-          {t.projects.title}
-        </h2>
-      </div>
-
-      <a
-        href={githubUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-2 px-4 py-2 border border-mono-300 dark:border-mono-800 bg-white dark:bg-mono-900 text-xs font-mono font-semibold uppercase tracking-wider text-mono-950 dark:text-mono-50 hover:border-mono-950 dark:hover:border-mono-50 transition-colors w-fit"
-      >
-        <Github class="w-3.5 h-3.5 stroke-[1.75]" />
-        <span>GitHub</span>
-      </a>
+    <div class="mb-8">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-mono-950 dark:text-mono-50">
+        {t.projects.title}
+      </h2>
     </div>
 
     {#if projects.length > 0}
