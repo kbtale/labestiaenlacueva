@@ -32,7 +32,7 @@ export const translations = {
       socialsHeader: 'Canales y Perfiles',
     },
     playlist: {
-      title: 'Producciones & Series',
+      title: 'Producciones y Series',
       videoCount: 'Videos disponibles',
       videoLabel: 'Video',
       of: 'de',
@@ -47,7 +47,7 @@ export const translations = {
       emptyTitle: 'Sin clips cargados',
     },
     projects: {
-      title: 'Desarrollos & Código',
+      title: 'Desarrollos y Código',
       sourceCode: 'Código',
       liveProject: 'Sitio Web',
       emptyTitle: 'Repositorio en preparación',
@@ -70,7 +70,7 @@ export const translations = {
     },
     footer: {
       rights: 'Todos los derechos reservados.',
-      stack: 'Svelte 5 & UnoCSS',
+      stack: 'Svelte 5 y UnoCSS',
     }
   },
   en: {
@@ -87,10 +87,10 @@ export const translations = {
       title: 'La Bestia En La Cueva',
       btnExplore: 'Explore Media',
       btnContact: 'Contact',
-      socialsHeader: 'Channels & Profiles',
+      socialsHeader: 'Channels and Profiles',
     },
     playlist: {
-      title: 'Productions & Series',
+      title: 'Productions and Series',
       videoCount: 'Available videos',
       videoLabel: 'Video',
       of: 'of',
@@ -105,7 +105,7 @@ export const translations = {
       emptyTitle: 'No short clips loaded',
     },
     projects: {
-      title: 'Engineering & Code',
+      title: 'Engineering and Code',
       sourceCode: 'Code',
       liveProject: 'Live Site',
       emptyTitle: 'Repository in preparation',
@@ -128,7 +128,7 @@ export const translations = {
     },
     footer: {
       rights: 'All rights reserved.',
-      stack: 'Svelte 5 & UnoCSS',
+      stack: 'Svelte 5 and UnoCSS',
     }
   }
 };

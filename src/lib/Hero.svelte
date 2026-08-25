@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Youtube, Video, Twitter, Github, Instagram, Mail, ArrowUpRight, ArrowDown } from 'lucide-svelte';
+  import { Youtube, Video, Twitter, Github, Instagram, Mail, ArrowUpRight, ArrowDown, MessageSquare, Radio, AtSign, Pin } from 'lucide-svelte';
   import { getLang, translations } from './i18n.svelte';
   import { siteConfig } from './config';
 
@@ -9,7 +9,11 @@
   const getSocialIcon = (id: string) => {
     switch (id) {
       case 'youtube': return Youtube;
+      case 'discord': return MessageSquare;
       case 'tiktok': return Video;
+      case 'kick': return Radio;
+      case 'threads': return AtSign;
+      case 'pinterest': return Pin;
       case 'x': return Twitter;
       case 'github': return Github;
       case 'instagram': return Instagram;
