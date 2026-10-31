@@ -872,11 +872,10 @@ export class VaultEngine {
     const checkLimit = Math.min(this.totalCapacity, this.world.length);
     for (let i = 0; i < checkLimit; i++) {
       const w = this.world[i];
-      if (!w || w.h <= 0.01) continue;
-      if (this.grow > 0.3 && w.hideFly) continue;
+      if (this.uniforms.uFog.value > 0.3 ? w.hideFly : i >= this.N) continue;
 
-      const zRel = -w.pos.z - this.camera.position.z;
-      if (zRel <= w.h * 1.5 || zRel > 2500.0) continue;
+      const zRel = -w.pos.z + this.camera.position.z;
+      if (zRel <= w.h * 1.7 || zRel > 2500.0) continue;
 
       const pxScale = focal / zRel;
       const sx = cx + (w.pos.x - this.camera.position.x) * pxScale;
@@ -987,10 +986,26 @@ export class VaultEngine {
     this.attrDim.needsUpdate = true;
   }
 
+  private setGrow(g: number) {
+    if (Math.abs(g - this.grow) < 0.002 || !this.mesh || !this.data) return;
+    this.grow = g;
+    const D = this.data;
+    for (let i = 0; i < this.N; i++) {
+      if (this.tileEpoch[i] !== 0 || D.cells[i][9]) continue;
+      const w = this.world[i];
+      w.h = w.h0 * (w.hs + (1.0 - w.hs) * this.grow);
+      if (!w.float) {
+        this.vS.set(w.h, w.h, 1);
+        this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
+      }
+    }
+    this.dirty = true;
+  }
+
   private renderLoop(time: number) {
     if (this.isDestroyed) return;
 
-    const dt = Math.min(0.1, (time - this.lastTime) * 0.001 || 0.016);
+    const dt = Math.min(0.05, (time - this.lastTime) * 0.001 || 0.016);
     this.lastTime = time;
 
     this.drainSliceJobs();
@@ -1002,55 +1017,45 @@ export class VaultEngine {
         this.targetDist = 0;
         this.rewind = null;
       } else {
-        const ease = 1 - Math.pow(1 - elapsed, 3);
+        const ease = elapsed < 0.5 ? 4 * elapsed * elapsed * elapsed : 1 - Math.pow(-2 * elapsed + 2, 3) / 2;
         this.dist = this.rewind.from * (1 - ease);
         this.targetDist = this.dist;
       }
     } else {
-      if (Math.abs(this.velocity) > 0.01) {
-        this.targetDist = Math.max(0, this.targetDist + this.velocity * dt * 60);
-        this.velocity *= Math.exp(-dt * 6);
+      if (Math.abs(this.velocity) > 0.1) {
+        this.pushDelta(this.velocity);
+        this.velocity *= Math.exp(-dt * 3.5);
       }
-      this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 6));
+      this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 4));
+      if (Math.abs(this.targetDist - this.dist) < 0.01) {
+        this.dist = this.targetDist;
+      }
     }
 
     this.onDistChangeCallback?.(this.dist);
 
-    this.drift.x += (this.mouseNorm.x - this.drift.x) * (1 - Math.exp(-dt * 4));
-    this.drift.y += (this.mouseNorm.y - this.drift.y) * (1 - Math.exp(-dt * 4));
+    this.drift.x += (this.mouseNorm.x - this.drift.x) * (1 - Math.exp(-dt * 1.5));
+    this.drift.y += (this.mouseNorm.y - this.drift.y) * (1 - Math.exp(-dt * 1.5));
 
-    this.camera.position.x = this.drift.x * 14.0;
-    this.camera.position.y = this.drift.y * 9.0;
-    this.camera.rotation.y = -this.drift.x * 0.04;
-    this.camera.rotation.x = this.drift.y * 0.03;
+    const away = Math.min(1, this.dist / 120);
+    const ease = away * away * (3 - 2 * away);
+    this.uniforms.uShift.value = 1.0 * (1 - ease);
+    this.uniforms.uFog.value = ease;
+    this.uniforms.uBlur.value = ease;
+
+    const drift = 0.5 + ease * 2.5;
+    this.camera.position.set(this.drift.x * drift, -this.drift.y * drift, -this.dist);
+    this.camera.lookAt(this.drift.x * drift * 0.6, -this.drift.y * drift * 0.6, -this.dist - 200);
 
     this.stage(dt);
 
-    this.softFactor += (this.targetSoft - this.softFactor) * (1 - Math.exp(-dt * 8));
+    this.softFactor += (this.targetSoft - this.softFactor) * (1 - Math.exp(-dt * 6));
     this.uniforms.uSoft.value = this.softFactor;
     this.uniforms.uTime.value = time * 0.001;
 
-    this.grow = Math.min(1.0, this.dist / 300.0);
-    this.uniforms.uShift.value = this.grow;
-    this.uniforms.uFog.value = Math.min(1.0, this.dist / 800.0);
-
-    this.camera.position.z = this.dist;
-
+    this.setGrow(ease);
     this.cycleEpochs();
     this.updateRunway();
-
-    if (this.mesh && Math.abs(this.targetDist - this.dist) > 0.05) {
-      for (let i = 0; i < this.N; i += 7) {
-        const w = this.world[i];
-        if (this.tileEpoch[i] === 0 && !w.hideFly) {
-          const currentH = w.h0 * (w.hs + (1.0 - w.hs) * this.grow);
-          this.vS.set(currentH, currentH, 1);
-          this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
-        }
-      }
-      this.mesh.instanceMatrix.needsUpdate = true;
-    }
-
     this.updateHaloFloaters(time);
     this.flush();
     this.updateHover();

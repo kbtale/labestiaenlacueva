@@ -31,13 +31,13 @@
 
       shown += (goal - shown) * (1 - Math.exp(-dt * 7));
 
-      if (progress >= 1 && pace >= 1 && shown > 0.995) {
+      if ((progress >= 0.99 || pace >= 1) && (shown > 0.98 || (now - t0) > 2200)) {
         shown = 1;
         isFading = true;
         setTimeout(() => {
           isDone = true;
           onComplete?.();
-        }, 750);
+        }, 550);
         return;
       }
 
