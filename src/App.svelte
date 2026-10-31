@@ -38,10 +38,6 @@
     loadProgress = Math.max(loadProgress, p);
   }
 
-  function handleExplore() {
-    canvasComponent?.flyTo(380);
-  }
-
   function handleRewind() {
     canvasComponent?.rewindToStart();
   }
@@ -71,7 +67,6 @@
 
   <VaultHero
     dist={currentDist}
-    onExplore={handleExplore}
   />
 
   <VaultHud
