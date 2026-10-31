@@ -2,9 +2,11 @@
   interface Props {
     activeFilter: string | null;
     onFilterChange: (filter: string | null) => void;
+    dist?: number;
+    onRewind?: () => void;
   }
 
-  let { activeFilter, onFilterChange }: Props = $props();
+  let { activeFilter, onFilterChange, dist = 0, onRewind }: Props = $props();
 
   const playlists = [
     { id: null, label: 'Todos' },
@@ -59,6 +61,18 @@
         <path d="M9 14a3 3 0 0 0 6 0" />
       </svg>
     </a>
+
+    {#if dist > 20}
+      <button
+        onclick={onRewind}
+        class="font-ui text-xs font-semibold px-3.5 py-1.5 rounded-full bg-[#16171c]/90 text-white/90 hover:text-white border border-white/20 backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95"
+      >
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Volver</span>
+      </button>
+    {/if}
   </div>
 
   <nav class="pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-[#121316]/80 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-xl overflow-x-auto max-w-[70vw] sm:max-w-none">

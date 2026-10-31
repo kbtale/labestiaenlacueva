@@ -27,6 +27,10 @@
     engine?.flyTo(target);
   }
 
+  export function rewindToStart() {
+    engine?.rewindToStart();
+  }
+
   onMount(() => {
     engine = new VaultEngine(
       canvasEl,

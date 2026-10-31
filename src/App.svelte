@@ -7,7 +7,7 @@
   import VaultPlayer from './lib/VaultPlayer.svelte';
   import type { ArchiveItem } from './lib/VaultEngine';
 
-  let canvasComponent: { flyTo: (target: number) => void } | null = $state(null);
+  let canvasComponent: { flyTo: (target: number) => void; rewindToStart: () => void } | null = $state(null);
   let activeFilter = $state<string | null>(null);
   let hoveredItem = $state<ArchiveItem | null>(null);
   let selectedItem = $state<ArchiveItem | null>(null);
@@ -41,6 +41,10 @@
   function handleExplore() {
     canvasComponent?.flyTo(380);
   }
+
+  function handleRewind() {
+    canvasComponent?.rewindToStart();
+  }
 </script>
 
 <div class="relative w-screen h-screen overflow-hidden bg-[#0a0a0b] text-[#ededed]">
@@ -60,7 +64,9 @@
 
   <VaultNav
     {activeFilter}
+    dist={currentDist}
     onFilterChange={handleFilterChange}
+    onRewind={handleRewind}
   />
 
   <VaultHero

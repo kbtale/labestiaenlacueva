@@ -73,9 +73,18 @@ export class VaultEngine {
   private dpr = 1;
   private dist = 0;
   private targetDist = 0;
+  private velocity = 0;
+  private lastTime = performance.now();
   private isInteracting = false;
   private pointerDownPos = { x: 0, y: 0, time: 0 };
   private pointerCurrentPos = { x: -1000, y: -1000, inCanvas: false };
+  private mouseNorm = { x: 0, y: 0 };
+  private drift = { x: 0, y: 0 };
+  private rewind: { from: number; t0: number; dur: number } | null = null;
+  
+  private fr = { cx: 0, cy: 0, w: 0, h: 0, ready: false };
+  private isDrawerOpen = false;
+
   private hoveredIndex = -1;
   private activeFilter: string | null = null;
   private softFactor = 0;
@@ -162,6 +171,7 @@ export class VaultEngine {
     this.handlePointerMove = this.handlePointerMove.bind(this);
     this.handlePointerDown = this.handlePointerDown.bind(this);
     this.handlePointerUp = this.handlePointerUp.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
 
     this.attachEvents();
@@ -529,6 +539,52 @@ export class VaultEngine {
     this.dirty = false;
   }
 
+  private stage(dt: number) {
+    if (!this.data) return;
+    const wide = this.W > 860;
+    const open = this.isDrawerOpen;
+
+    let x0 = 0;
+    let x1 = this.W;
+    let y0 = Math.max(70, this.H * 0.085);
+    let y1 = this.H * 1.07;
+
+    if (open) {
+      if (wide) {
+        x1 = Math.max(this.W * 0.4, this.W - 580);
+      } else {
+        y1 = this.H * 0.45;
+      }
+    }
+
+    const target = {
+      cx: (x0 + x1) / 2,
+      cy: (y0 + y1) / 2 - (open ? 0 : this.H * 0.08),
+      w: x1 - x0,
+      h: y1 - y0
+    };
+
+    if (!wide && !open) {
+      target.h = this.H * 0.7;
+      target.cy = this.H * 0.475;
+      target.cx = this.W * 0.47;
+    }
+
+    const k = this.fr.ready ? 1 - Math.exp(-dt * 5) : 1;
+    this.fr.cx += (target.cx - this.fr.cx) * k;
+    this.fr.cy += (target.cy - this.fr.cy) * k;
+    this.fr.w += (target.w - this.fr.w) * k;
+    this.fr.h += (target.h - this.fr.h) * k;
+    this.fr.ready = true;
+
+    const fitH = 2 * Math.atan(100 / 1.03 / 2 / 160.0 * (this.H / this.fr.h)) * 180 / Math.PI;
+    const fitW = 2 * Math.atan((100 * 0.93418) / 0.96 / 2 / 160.0 / this.camera.aspect * (this.W / this.fr.w)) * 180 / Math.PI;
+    this.camera.fov = wide || open ? Math.max(fitH, fitW) : fitH;
+
+    this.camera.setViewOffset(this.W, this.H, this.W / 2 - this.fr.cx, this.H / 2 - this.fr.cy, this.W, this.H);
+    this.camera.updateProjectionMatrix();
+  }
+
   private handleResize() {
     if (!this.canvas) return;
     const cr = this.canvas.getBoundingClientRect();
@@ -536,39 +592,43 @@ export class VaultEngine {
     this.H = Math.round(cr.height) || window.innerHeight;
     this.renderer.setSize(this.W, this.H, false);
     this.camera.aspect = this.W / this.H;
+    this.stage(1.0);
+  }
 
-    const wide = this.W > 860;
-    const fitH = 2 * Math.atan(100 / 1.03 / 2 / 160.0) * 180 / Math.PI;
-    const fitW = 2 * Math.atan((100 * 0.93418) / 0.96 / 2 / 160.0 / this.camera.aspect) * 180 / Math.PI;
-    this.camera.fov = wide ? Math.max(fitH, fitW) : fitH;
-
-    if (!wide) {
-      this.camera.setViewOffset(this.W, this.H, 0, -this.H * 0.08, this.W, this.H);
-    } else {
-      this.camera.clearViewOffset();
+  private pushDelta(dy: number) {
+    if (this.rewind) {
+      this.rewind = null;
+      this.targetDist = this.dist;
     }
-    this.camera.updateProjectionMatrix();
+    this.targetDist = Math.max(0, this.targetDist + dy);
   }
 
   private handleWheel(e: WheelEvent) {
-    this.targetDist += e.deltaY * 0.85;
-    this.targetDist = Math.max(0, this.targetDist);
+    e.preventDefault();
+    const mult = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? this.H : 1;
+    this.pushDelta(e.deltaY * mult * 0.55);
   }
 
   private handlePointerDown(e: PointerEvent) {
     this.isInteracting = true;
     this.pointerDownPos = { x: e.clientX, y: e.clientY, time: performance.now() };
     this.pointerCurrentPos = { x: e.clientX, y: e.clientY, inCanvas: e.target === this.canvas };
+    this.velocity = 0;
   }
 
   private handlePointerMove(e: PointerEvent) {
     this.pointerCurrentPos = { x: e.clientX, y: e.clientY, inCanvas: e.target === this.canvas };
+    this.mouseNorm.x = (e.clientX / this.W) * 2 - 1;
+    this.mouseNorm.y = -(e.clientY / this.H) * 2 + 1;
 
     if (this.isInteracting) {
-      const dy = e.clientY - this.pointerDownPos.y;
+      const now = performance.now();
+      const dy = (this.pointerDownPos.y - e.clientY) * 1.6;
+      this.pushDelta(dy);
+      const dt = Math.max(8, now - this.pointerDownPos.time);
+      this.velocity = (dy / dt) * 16;
       this.pointerDownPos.y = e.clientY;
-      this.targetDist -= dy * 2.2;
-      this.targetDist = Math.max(0, this.targetDist);
+      this.pointerDownPos.time = now;
     }
   }
 
@@ -589,6 +649,34 @@ export class VaultEngine {
         }
       }
     }
+  }
+
+  private handleKeyDown(e: KeyboardEvent) {
+    if (document.activeElement && document.activeElement.tagName.match(/INPUT|TEXTAREA|SELECT/)) return;
+    const steps: Record<string, number> = {
+      ArrowDown: 160,
+      PageDown: 600,
+      ' ': 600,
+      ArrowUp: -160,
+      PageUp: -600
+    };
+    if (steps[e.key]) {
+      e.preventDefault();
+      this.pushDelta(steps[e.key]);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      this.rewindToStart();
+    }
+  }
+
+  public rewindToStart() {
+    if (this.dist < 1) return;
+    this.rewind = {
+      from: this.dist,
+      t0: performance.now(),
+      dur: Math.min(2400, 1200 + Math.sqrt(this.dist) * 14)
+    };
+    this.velocity = 0;
   }
 
   private pickInstance(clientX: number, clientY: number): number {
@@ -613,8 +701,8 @@ export class VaultEngine {
       if (zRel <= w.h * 1.5 || zRel > 2500.0) continue;
 
       const pxScale = focal / zRel;
-      const sx = cx + w.pos.x * pxScale;
-      const sy = cy - w.pos.y * pxScale;
+      const sx = cx + (w.pos.x - this.camera.position.x) * pxScale;
+      const sy = cy - (w.pos.y - this.camera.position.y) * pxScale;
       const sh = w.h * pxScale;
       const sw = sh * aspect;
 
@@ -684,9 +772,11 @@ export class VaultEngine {
 
   public setSoft(soft: boolean) {
     this.targetSoft = soft ? 1 : 0;
+    this.isDrawerOpen = soft;
   }
 
   public flyTo(target: number) {
+    if (this.rewind) this.rewind = null;
     this.targetDist = Math.max(0, target);
   }
 
@@ -722,10 +812,41 @@ export class VaultEngine {
   private renderLoop(time: number) {
     if (this.isDestroyed) return;
 
-    this.dist += (this.targetDist - this.dist) * 0.08;
+    const dt = Math.min(0.1, (time - this.lastTime) * 0.001 || 0.016);
+    this.lastTime = time;
+
+    if (this.rewind) {
+      const elapsed = (time - this.rewind.t0) / this.rewind.dur;
+      if (elapsed >= 1) {
+        this.dist = 0;
+        this.targetDist = 0;
+        this.rewind = null;
+      } else {
+        const ease = 1 - Math.pow(1 - elapsed, 3);
+        this.dist = this.rewind.from * (1 - ease);
+        this.targetDist = this.dist;
+      }
+    } else {
+      if (Math.abs(this.velocity) > 0.01) {
+        this.targetDist = Math.max(0, this.targetDist + this.velocity * dt * 60);
+        this.velocity *= Math.exp(-dt * 6);
+      }
+      this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 6));
+    }
+
     this.onDistChangeCallback?.(this.dist);
 
-    this.softFactor += (this.targetSoft - this.softFactor) * 0.1;
+    this.drift.x += (this.mouseNorm.x - this.drift.x) * (1 - Math.exp(-dt * 4));
+    this.drift.y += (this.mouseNorm.y - this.drift.y) * (1 - Math.exp(-dt * 4));
+
+    this.camera.position.x = this.drift.x * 14.0;
+    this.camera.position.y = this.drift.y * 9.0;
+    this.camera.rotation.y = -this.drift.x * 0.04;
+    this.camera.rotation.x = this.drift.y * 0.03;
+
+    this.stage(dt);
+
+    this.softFactor += (this.targetSoft - this.softFactor) * (1 - Math.exp(-dt * 8));
     this.uniforms.uSoft.value = this.softFactor;
     this.uniforms.uTime.value = time * 0.001;
 
@@ -759,10 +880,11 @@ export class VaultEngine {
 
   private attachEvents() {
     window.addEventListener('resize', this.handleResize);
-    window.addEventListener('wheel', this.handleWheel, { passive: true });
+    window.addEventListener('wheel', this.handleWheel, { passive: false });
     window.addEventListener('pointermove', this.handlePointerMove);
     window.addEventListener('pointerdown', this.handlePointerDown);
     window.addEventListener('pointerup', this.handlePointerUp);
+    window.addEventListener('keydown', this.handleKeyDown);
   }
 
   public destroy() {
@@ -773,6 +895,7 @@ export class VaultEngine {
     window.removeEventListener('pointermove', this.handlePointerMove);
     window.removeEventListener('pointerdown', this.handlePointerDown);
     window.removeEventListener('pointerup', this.handlePointerUp);
+    window.removeEventListener('keydown', this.handleKeyDown);
     this.renderer.dispose();
   }
 }
