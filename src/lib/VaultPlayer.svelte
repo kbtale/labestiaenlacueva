@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ArchiveItem } from './VaultEngine';
+  import VaultCapsuleButton from './VaultCapsuleButton.svelte';
 
   interface Props {
     selectedItem: ArchiveItem | null;
@@ -94,30 +95,20 @@
       </div>
 
       <div class="p-6 sm:p-7 border-t border-white/10 bg-[#0a0a0d]/60 flex flex-wrap items-center gap-3">
-        <a
+        <VaultCapsuleButton
+          label="Abrir en YouTube"
+          icon="external"
           href={`https://www.youtube.com/watch?v=${selectedItem.id}`}
           target="_blank"
-          rel="noopener noreferrer"
-          class="font-ui text-xs font-semibold px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 transition-all flex items-center gap-2 shadow-lg"
-        >
-          <span>Abrir en YouTube</span>
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-        </a>
+        />
 
-        <button
+        <VaultCapsuleButton
+          label="Copiar enlace"
+          icon="copy"
           onclick={copyLink}
-          class="font-ui text-xs font-medium px-5 py-2.5 rounded-full bg-white/10 text-white hover:bg-white/15 transition-all flex items-center gap-2 border border-white/10"
-        >
-          <span>{copied ? '¡Enlace copiado!' : 'Copiar enlace'}</span>
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </button>
+          isSuccess={copied}
+          successLabel="¡Enlace copiado!"
+        />
       </div>
     </aside>
   </div>

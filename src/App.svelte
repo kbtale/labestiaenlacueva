@@ -41,6 +41,10 @@
   function handleRewind() {
     canvasComponent?.rewindToStart();
   }
+
+  function handleExplore() {
+    canvasComponent?.flyTo(380);
+  }
 </script>
 
 <div class="relative w-screen h-screen overflow-hidden bg-[#0a0a0b] text-[#ededed]">
@@ -64,10 +68,12 @@
     dist={currentDist}
     onFilterChange={handleFilterChange}
     onRewind={handleRewind}
+    onExplore={handleExplore}
   />
 
   <VaultHero
     dist={currentDist}
+    onExplore={handleExplore}
   />
 
   <VaultHud

@@ -1,9 +1,12 @@
 <script lang="ts">
+  import VaultCapsuleButton from './VaultCapsuleButton.svelte';
+
   interface Props {
     dist: number;
+    onExplore?: () => void;
   }
 
-  let { dist }: Props = $props();
+  let { dist, onExplore }: Props = $props();
 
   let heroOpacity = $derived(Math.max(0, 1 - dist / 180));
   let isHidden = $derived(heroOpacity <= 0.005);
@@ -16,11 +19,19 @@
   >
     <div class="h-14"></div>
 
-    <div class="flex items-end justify-between gap-6 pb-4 sm:pb-8">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-4 sm:pb-8">
       <div class="max-w-md pointer-events-auto">
         <p class="font-body text-sm sm:text-base text-[#d4d4d8] leading-relaxed">
           Reflexiones visuales, cine, arte y filosofía. Un archivo de obras y debates que desafían el ruido contemporáneo. Haz scroll para adentrarte en la cueva.
         </p>
+      </div>
+
+      <div class="pointer-events-auto flex items-center">
+        <VaultCapsuleButton
+          label="Explorar colecciones"
+          icon="arrow-down"
+          onclick={onExplore}
+        />
       </div>
     </div>
 
