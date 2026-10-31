@@ -154,6 +154,7 @@ export class VaultEngine {
   private attrDim!: THREE.InstancedBufferAttribute;
   private attrFill!: THREE.InstancedBufferAttribute;
   private attrFilterDim!: THREE.InstancedBufferAttribute;
+  private attrCase!: THREE.InstancedBufferAttribute;
 
   private m4 = new THREE.Matrix4();
   private qI = new THREE.Quaternion();
@@ -369,6 +370,7 @@ export class VaultEngine {
       attribute float aDim;
       attribute float aFill;
       attribute float aFilterDim;
+      attribute float aCase;
       
       uniform vec2 uGrid;
       uniform float uHover;
@@ -388,6 +390,7 @@ export class VaultEngine {
       varying float vFill;
       varying float vFilterDim;
       varying float vBias;
+      varying float vCase;
       
       void main() {
         vec4 mv = viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0);
@@ -405,6 +408,7 @@ export class VaultEngine {
         vDim = aDim;
         vFill = aFill;
         vFilterDim = aFilterDim;
+        vCase = aCase;
         vHover = abs(float(gl_InstanceID) - uHover) < 0.5 ? 1.0 : 0.0;
         gl_Position = projectionMatrix * mv;
       }
@@ -430,6 +434,7 @@ export class VaultEngine {
       varying float vFill;
       varying float vFilterDim;
       varying float vBias;
+      varying float vCase;
       
       float ign(vec2 p) {
         return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
@@ -448,6 +453,14 @@ export class VaultEngine {
         if (vHover > 0.5) {
           c = mix(c, vec3(1.0), 0.18);
           if (edge < 0.025) c = vec3(1.0);
+        }
+        if (vCase > 0.0) {
+          float t = fract(uTime * 0.14 + vCase * 7.0);
+          float p = vLocal.x * 0.75 + (1.0 - vLocal.y) * 0.5;
+          float pos = t * 2.0 - 0.4;
+          float band = exp(-pow((p - pos) / 0.06, 2.0)) * 0.55 + exp(-pow((p - pos) / 0.2, 2.0)) * 0.16;
+          float inner = smoothstep(0.1, 0.0, edge) * (0.14 + 0.07 * sin(uTime * 1.6 + vCase * 30.0));
+          c += vec3(1.0, 0.98, 0.95) * (band + inner) * uFog * (1.0 - smoothstep(110.0, 190.0, vDepth));
         }
         c = mix(c, uBg, smoothstep(520.0, 1500.0, vDepth) * uFog);
         c = mix(c, uBg, uSoft * 0.45);
@@ -470,6 +483,7 @@ export class VaultEngine {
     this.attrDim = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity).fill(1), 1);
     this.attrFill = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity), 1);
     this.attrFilterDim = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity).fill(1), 1);
+    this.attrCase = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity), 1);
 
     this.attrSlot.setUsage(THREE.DynamicDrawUsage);
     this.attrColor.setUsage(THREE.DynamicDrawUsage);
@@ -477,6 +491,7 @@ export class VaultEngine {
     this.attrDim.setUsage(THREE.DynamicDrawUsage);
     this.attrFill.setUsage(THREE.DynamicDrawUsage);
     this.attrFilterDim.setUsage(THREE.DynamicDrawUsage);
+    this.attrCase.setUsage(THREE.DynamicDrawUsage);
 
     geo.setAttribute('aSlot', this.attrSlot);
     geo.setAttribute('aColor', this.attrColor);
@@ -484,6 +499,7 @@ export class VaultEngine {
     geo.setAttribute('aDim', this.attrDim);
     geo.setAttribute('aFill', this.attrFill);
     geo.setAttribute('aFilterDim', this.attrFilterDim);
+    geo.setAttribute('aCase', this.attrCase);
 
     this.world = [];
     this.floaters = [];
@@ -572,9 +588,11 @@ export class VaultEngine {
       w.hideFly = !!c[9] || (Math.abs(w.pos.x) < RUNWAY.rx && Math.abs(w.pos.y) < RUNWAY.ry);
       this.attrDim.setX(i, c[8] ?? 1);
       this.attrFill.setX(i, w.hideFly ? 1 : 0);
+      this.attrCase.setX(i, 0);
     } else if (i % this.stride !== 0) {
       w.h = 0;
       w.hideFly = false;
+      this.attrCase.setX(i, 0);
     } else {
       const r = rng(i + 1, epoch);
       const ang = r() * Math.PI * 2;
@@ -588,6 +606,7 @@ export class VaultEngine {
       w.hideFly = false;
       this.attrDim.setX(i, 1);
       this.attrFill.setX(i, 0);
+      this.attrCase.setX(i, 0);
     }
 
     this.vS.set(w.h, w.h, 1);
@@ -656,6 +675,7 @@ export class VaultEngine {
       const seqIdx = this.data.seq[k % M];
       const itemIdx = seqIdx % numEntries;
       this.setImage(i, itemIdx);
+      this.attrCase.setX(i, ((k % 11) + 1) * 0.1);
       this.dirty = true;
     }
   }
@@ -679,6 +699,7 @@ export class VaultEngine {
     this.attrMean.needsUpdate = true;
     this.attrDim.needsUpdate = true;
     this.attrFill.needsUpdate = true;
+    this.attrCase.needsUpdate = true;
     this.dirty = false;
   }
 
