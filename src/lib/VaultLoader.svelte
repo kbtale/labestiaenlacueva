@@ -4,9 +4,10 @@
   interface Props {
     progress: number;
     onComplete?: () => void;
+    onStartIntro?: () => void;
   }
 
-  let { progress, onComplete }: Props = $props();
+  let { progress, onComplete, onStartIntro }: Props = $props();
 
   let shown = $state(0);
   let isDone = $state(false);
@@ -34,6 +35,7 @@
       if ((progress >= 0.99 || pace >= 1) && (shown > 0.98 || (now - t0) > 2200)) {
         shown = 1;
         isFading = true;
+        onStartIntro?.();
         setTimeout(() => {
           isDone = true;
           onComplete?.();

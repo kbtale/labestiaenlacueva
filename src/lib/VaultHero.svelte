@@ -24,8 +24,8 @@
       </div>
     </div>
 
-    <div class="w-full text-center overflow-hidden pb-1 sm:pb-2 select-none pointer-events-none">
-      <h1 class="font-display text-[clamp(3.8rem,10.5vw,11.5rem)] text-white/95 leading-[0.8] tracking-tight whitespace-nowrap drop-shadow-2xl">
+    <div class="w-full text-center overflow-visible pt-4 pb-2 select-none pointer-events-none">
+      <h1 class="font-display text-[clamp(3.8rem,10.5vw,11.5rem)] text-white/95 leading-[1.1] tracking-tight whitespace-nowrap drop-shadow-2xl">
         La Bestia en la Cueva
       </h1>
     </div>

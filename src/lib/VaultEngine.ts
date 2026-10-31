@@ -175,7 +175,16 @@ export class VaultEngine {
     hs: number;
     hideFly: boolean;
     float?: [number, number, number, number, number];
+    from?: THREE.Vector3;
+    delay?: number;
+    dur?: number;
   }> = [];
+
+  private introStart = -1;
+  private introEnd = 0;
+  private introDone = false;
+  private vIntroPos = new THREE.Vector3();
+  private vIntroTg = new THREE.Vector3();
 
   private uniforms = {
     uShift: { value: 0 },
@@ -522,7 +531,7 @@ export class VaultEngine {
         float: undefined as [number, number, number, number, number] | undefined
       };
 
-      const isHalo = c[9] === 1 || (c[8] ?? 1) < 0.6;
+      const isHalo = c[9] !== 1 && (c[8] ?? 1) < 0.6;
       if (isHalo) {
         const seed = (i * 137.5) % 1;
         w.float = [0.04 + seed * 0.05, 0, seed, i * 0.35, 18 + seed * 25];
@@ -587,6 +596,10 @@ export class VaultEngine {
       w.h0 = D.cell[1] * k * 0.94;
       w.hs = c[7] ?? 1;
       w.h = w.h0 * (w.hs + (1 - w.hs) * this.grow);
+      if (c[9] === 1) {
+        w.h0 = 0;
+        w.h = 0;
+      }
       w.pos.set(
         (col + 0.5 - D.cols / 2) * D.cell[0] * k,
         (D.rows / 2 - row - 0.5) * D.cell[1] * k,
@@ -594,7 +607,7 @@ export class VaultEngine {
       );
       w.base.copy(w.pos);
       w.hideFly = !!c[9] || (Math.abs(w.pos.x) < RUNWAY.rx && Math.abs(w.pos.y) < RUNWAY.ry);
-      this.attrDim.setX(i, c[8] ?? 1);
+      this.attrDim.setX(i, c[9] === 1 ? 0 : (c[8] ?? 1));
       this.attrFill.setX(i, w.hideFly ? 1 : 0);
       this.attrCase.setX(i, 0);
     } else if (i % this.stride !== 0) {
@@ -957,6 +970,63 @@ export class VaultEngine {
     this.targetDist = Math.max(0, target);
   }
 
+  public startIntro() {
+    if (this.introStart < 0 && !this.introDone) {
+      this.introStart = performance.now();
+      this.introEnd = 0;
+    }
+  }
+
+  private updateIntro(now: number) {
+    if (this.introStart < 0 || !this.data || !this.mesh) return;
+    const t = now - this.introStart;
+    if (this.introEnd > 0 && t > this.introEnd) {
+      this.introStart = -1;
+      this.introDone = true;
+      this.updateHaloFloaters(now);
+      return;
+    }
+
+    const D = this.data;
+    const v = this.vIntroPos;
+    const tg = this.vIntroTg;
+    let last = 0;
+
+    for (let i = 0; i < this.N; i++) {
+      if (this.tileEpoch[i] !== 0) continue;
+      const w = this.world[i];
+      const c = D.cells[i];
+      if (c[9] === 1 || w.h0 <= 0) continue;
+
+      if (!w.from) {
+        const r = rng(i + 101, 7);
+        const k = c[4] / D.D0;
+        const a = r() * Math.PI * 2;
+        const rad = (60 + r() * 120) * k;
+        w.from = new THREE.Vector3(Math.cos(a) * rad, Math.sin(a) * rad, -(c[4] * (1.4 + r() * 1.2)));
+        w.delay = r() * 1500 + Math.hypot(c[5] - D.cols / 2, c[6] - D.rows * 0.4) * 9;
+        w.dur = 1300 + r() * 900;
+      }
+
+      last = Math.max(last, w.delay + w.dur);
+      let p = Math.min(1, Math.max(0, (t - w.delay) / w.dur));
+      p = 1 - Math.pow(1 - p, 3);
+
+      const dim = c[8] ?? 1;
+      tg.copy(w.pos);
+
+      v.lerpVectors(w.from, tg, p);
+      this.attrDim.setX(i, dim * Math.min(1, p * 1.6));
+      const s = w.h * (0.35 + 0.65 * p);
+      this.vS.set(s, s, 1);
+      this.mesh.setMatrixAt(i, this.m4.compose(v, this.qI, this.vS));
+    }
+
+    this.introEnd = last + 50;
+    this.mesh.instanceMatrix.needsUpdate = true;
+    this.attrDim.needsUpdate = true;
+  }
+
   private updateHaloFloaters(now: number) {
     if (!this.mesh || this.dist > 300) return;
     const t = now * 0.001;
@@ -1056,7 +1126,11 @@ export class VaultEngine {
     this.setGrow(ease);
     this.cycleEpochs();
     this.updateRunway();
-    this.updateHaloFloaters(time);
+    if (this.introStart >= 0) {
+      this.updateIntro(time);
+    } else {
+      this.updateHaloFloaters(time);
+    }
     this.flush();
     this.updateHover();
     this.renderer.render(this.scene, this.camera);

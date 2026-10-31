@@ -31,6 +31,10 @@
     engine?.rewindToStart();
   }
 
+  export function startIntro() {
+    engine?.startIntro();
+  }
+
   onMount(() => {
     engine = new VaultEngine(
       canvasEl,

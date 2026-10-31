@@ -7,7 +7,7 @@
   import VaultPlayer from './lib/VaultPlayer.svelte';
   import type { ArchiveItem } from './lib/VaultEngine';
 
-  let canvasComponent: { flyTo: (target: number) => void; rewindToStart: () => void } | null = $state(null);
+  let canvasComponent: { flyTo: (target: number) => void; rewindToStart: () => void; startIntro: () => void } | null = $state(null);
   let activeFilter = $state<string | null>(null);
   let hoveredItem = $state<ArchiveItem | null>(null);
   let selectedItem = $state<ArchiveItem | null>(null);
@@ -46,6 +46,7 @@
 <div class="relative w-screen h-screen overflow-hidden bg-[#0a0a0b] text-[#ededed]">
   <VaultLoader
     progress={loadProgress}
+    onStartIntro={() => canvasComponent?.startIntro()}
   />
 
   <VaultCanvas
