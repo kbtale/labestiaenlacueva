@@ -155,6 +155,7 @@ export class VaultEngine {
   private attrFill!: THREE.InstancedBufferAttribute;
   private attrFilterDim!: THREE.InstancedBufferAttribute;
   private attrCase!: THREE.InstancedBufferAttribute;
+  private attrRunway!: THREE.InstancedBufferAttribute;
 
   private m4 = new THREE.Matrix4();
   private qI = new THREE.Quaternion();
@@ -371,6 +372,7 @@ export class VaultEngine {
       attribute float aFill;
       attribute float aFilterDim;
       attribute float aCase;
+      attribute float aRunway;
       
       uniform vec2 uGrid;
       uniform float uHover;
@@ -397,6 +399,7 @@ export class VaultEngine {
         float s = length(instanceMatrix[1].xyz);
         float d = -mv.z;
         vFade = smoothstep(s * 1.1, s * 2.6, d);
+        vFade *= aRunway > 0.5 ? smoothstep(0.12, 0.65, uFog) : 1.0;
         vDepth = d;
         vLocal = uv;
         vBias = uBlur * pow(smoothstep(45.0, 1150.0, d), 0.75) * 5.0 + uSoft * 0.6;
@@ -484,6 +487,7 @@ export class VaultEngine {
     this.attrFill = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity), 1);
     this.attrFilterDim = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity).fill(1), 1);
     this.attrCase = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity), 1);
+    this.attrRunway = new THREE.InstancedBufferAttribute(new Float32Array(this.totalCapacity), 1);
 
     this.attrSlot.setUsage(THREE.DynamicDrawUsage);
     this.attrColor.setUsage(THREE.DynamicDrawUsage);
@@ -492,6 +496,7 @@ export class VaultEngine {
     this.attrFill.setUsage(THREE.DynamicDrawUsage);
     this.attrFilterDim.setUsage(THREE.DynamicDrawUsage);
     this.attrCase.setUsage(THREE.DynamicDrawUsage);
+    this.attrRunway.setUsage(THREE.DynamicDrawUsage);
 
     geo.setAttribute('aSlot', this.attrSlot);
     geo.setAttribute('aColor', this.attrColor);
@@ -500,6 +505,7 @@ export class VaultEngine {
     geo.setAttribute('aFill', this.attrFill);
     geo.setAttribute('aFilterDim', this.attrFilterDim);
     geo.setAttribute('aCase', this.attrCase);
+    geo.setAttribute('aRunway', this.attrRunway);
 
     this.world = [];
     this.floaters = [];
@@ -525,6 +531,7 @@ export class VaultEngine {
 
       this.world[i] = w;
       this.attrColor.setXYZ(i, c[1] / 255, c[2] / 255, c[3] / 255);
+      this.attrRunway.setX(i, 0);
       this.setEpoch(i, 0);
     }
 
@@ -541,6 +548,7 @@ export class VaultEngine {
       this.attrDim.setX(i, 1);
       this.attrFill.setX(i, 0);
       this.attrFilterDim.setX(i, 1);
+      this.attrRunway.setX(i, 1);
       this.vS.set(0, 0, 1);
       this.mesh.setMatrixAt(i, this.m4.compose(this.world[i].pos, this.qI, this.vS));
     }
@@ -700,6 +708,7 @@ export class VaultEngine {
     this.attrDim.needsUpdate = true;
     this.attrFill.needsUpdate = true;
     this.attrCase.needsUpdate = true;
+    this.attrRunway.needsUpdate = true;
     this.dirty = false;
   }
 
