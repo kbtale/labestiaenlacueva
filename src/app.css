@@ -1,45 +1,46 @@
 @import '@unocss/reset/tailwind-compat.css';
 
+@import url('https://fonts.googleapis.com/css2?family=Forum&family=La+Belle+Aurore&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&display=swap');
+
 :root {
   color-scheme: dark;
+  --font-display: 'La Belle Aurore', cursive;
+  --font-ui: 'Libre Franklin', sans-serif;
+  --font-body: 'Forum', serif;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #0A0A0A;
-  color: #FAFAFA;
+  font-family: var(--font-ui);
+  background-color: #0a0a0b;
+  color: #ededed;
+  overflow: hidden;
 }
 
-html:not(.dark) body {
-  background-color: #FFFFFF;
-  color: #0A0A0A;
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-ui {
+  font-family: var(--font-ui);
+}
+
+.font-body {
+  font-family: var(--font-body);
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
-}
-
-html:not(.dark) ::-webkit-scrollbar-track {
-  background: #FFFFFF;
+  background: #0a0a0b;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #262626;
-  border-radius: 3px;
-}
-
-html:not(.dark) ::-webkit-scrollbar-thumb {
-  background: #E5E5E5;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #404040;
-}
-
-html:not(.dark) ::-webkit-scrollbar-thumb:hover {
-  background: #D4D4D4;
 }
