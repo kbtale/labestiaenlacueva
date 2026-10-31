@@ -32,7 +32,7 @@
     class="vault-capsule-button group relative inline-flex items-center justify-between h-10 px-5 pr-12 rounded-full overflow-hidden text-xs font-mono tracking-widest uppercase text-white/90 hover:text-white transition-colors duration-200 select-none {className}"
   >
     <span
-      class="vault-capsule-backdrop absolute inset-0 rounded-full bg-white/5 border border-white/15 backdrop-blur-md transition-all duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-7 group-hover:h-7 group-hover:right-1.5 group-hover:top-1.5 group-hover:left-auto group-hover:bottom-auto group-hover:bg-white group-hover:border-transparent group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+      class="vault-capsule-backdrop absolute inset-0 rounded-full bg-[#14151a] transition-all duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-7 group-hover:h-7 group-hover:right-1.5 group-hover:top-1.5 group-hover:left-auto group-hover:bottom-auto group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
     ></span>
 
     <span class="vault-capsule-label relative z-10 whitespace-nowrap">
@@ -150,7 +150,7 @@
     class="vault-capsule-button group relative inline-flex items-center justify-between h-10 px-5 pr-12 rounded-full overflow-hidden text-xs font-mono tracking-widest uppercase text-white/90 hover:text-white transition-colors duration-200 select-none bg-transparent border-0 cursor-pointer active:scale-95 {className}"
   >
     <span
-      class="vault-capsule-backdrop absolute inset-0 rounded-full bg-white/5 border border-white/15 backdrop-blur-md transition-all duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-7 group-hover:h-7 group-hover:right-1.5 group-hover:top-1.5 group-hover:left-auto group-hover:bottom-auto group-hover:bg-white group-hover:border-transparent group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+      class="vault-capsule-backdrop absolute inset-0 rounded-full bg-[#14151a] transition-all duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-7 group-hover:h-7 group-hover:right-1.5 group-hover:top-1.5 group-hover:left-auto group-hover:bottom-auto group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
     ></span>
 
     <span class="vault-capsule-label relative z-10 whitespace-nowrap">

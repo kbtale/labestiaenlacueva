@@ -73,7 +73,7 @@
     <a
       href="/"
       aria-label="La Bestia en la Cueva"
-      class="vault-nav-brand w-9 h-9 rounded-full bg-[#16171c]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 hover:text-white hover:border-white/30 transition-all shadow-md group"
+      class="vault-nav-brand w-9 h-9 rounded-full bg-[#16171c]/90 backdrop-blur-md flex items-center justify-center text-white/90 hover:text-white transition-all shadow-md group"
     >
       <svg class="w-5 h-5 text-white/80 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 21h18" />
@@ -85,7 +85,7 @@
     {#if !isAtRest}
       <button
         onclick={onRewind}
-        class="vault-nav-rewind font-mono text-xs font-semibold px-3.5 py-1.5 rounded-full bg-[#16171c]/90 text-white/90 hover:text-white border border-white/20 backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer"
+        class="vault-nav-rewind font-mono text-xs font-semibold px-3.5 py-1.5 rounded-full bg-[#16171c]/95 text-white/90 hover:text-white backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"></polyline>
@@ -97,7 +97,7 @@
 
   <div class="relative flex items-center justify-center min-w-[280px]">
     <nav
-      class="vault-brand-menu pointer-events-auto flex items-center gap-5 sm:gap-7 bg-[#121316]/75 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none absolute'}"
+      class="vault-brand-menu pointer-events-auto flex items-center gap-5 sm:gap-7 bg-[#121316]/90 backdrop-blur-xl px-6 py-2.5 rounded-full shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none absolute'}"
     >
       <VaultRollLink label="Mis secciones" onclick={onExplore} />
       <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
@@ -106,7 +106,7 @@
     </nav>
 
     <nav
-      class="vault-filter-bar pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-[#121316]/85 backdrop-blur-xl px-2 py-1.5 rounded-full border border-white/10 shadow-xl overflow-x-auto max-w-[70vw] sm:max-w-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-2 scale-95 pointer-events-none absolute' : 'opacity-100 translate-y-0 scale-100'}"
+      class="vault-filter-bar pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-[#121316]/95 backdrop-blur-xl px-2 py-1.5 rounded-full shadow-xl overflow-x-auto max-w-[70vw] sm:max-w-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-2 scale-95 pointer-events-none absolute' : 'opacity-100 translate-y-0 scale-100'}"
     >
       {#each playlists as p}
         <button
@@ -119,7 +119,7 @@
     </nav>
   </div>
 
-  <div class="pointer-events-auto hidden md:flex items-center gap-2 bg-[#121316]/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl">
+  <div class="pointer-events-auto hidden md:flex items-center gap-2 bg-[#121316]/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl">
     {#each socials as s}
       <a
         href={s.url}
