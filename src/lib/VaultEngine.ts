@@ -41,9 +41,8 @@ export class VaultEngine {
   private dist = 0;
   private targetDist = 0;
   private isInteracting = false;
-  private pointerPos = new THREE.Vector2(0, 0);
-  private raycaster = new THREE.Raycaster();
-  private mouse = new THREE.Vector2(-10, -10);
+  private pointerDownPos = { x: 0, y: 0, time: 0 };
+  private pointerCurrentPos = { x: -1000, y: -1000, inCanvas: false };
   private hoveredIndex = -1;
   private activeFilter: string | null = null;
   private softFactor = 0;
@@ -139,6 +138,8 @@ export class VaultEngine {
     const cellCount = D.cells.length;
     const geo = new THREE.PlaneGeometry(D.cell[0] / D.cell[1], 1);
 
+    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, -1000), 10000);
+
     const vertShader = `
       attribute vec2 aSlot;
       attribute vec3 aColor;
@@ -215,11 +216,11 @@ export class VaultEngine {
         vec3 c = texture2D(uMap, vUv, vBias).rgb;
         c = clamp(c + (vColor - vMean) * uShift, 0.0, 1.0);
         c = mix(uBg, c, vDim);
-        c = mix(c * 0.2, c, vFilterDim);
+        c = mix(c * 0.15, c, vFilterDim);
         float edge = min(min(vLocal.x, 1.0 - vLocal.x), min(vLocal.y, 1.0 - vLocal.y));
         if (vHover > 0.5) {
-          c = mix(c, vec3(1.0), 0.12);
-          if (edge < 0.02) c = vec3(1.0);
+          c = mix(c, vec3(1.0), 0.18);
+          if (edge < 0.025) c = vec3(1.0);
         }
         c = mix(c, uBg, smoothstep(520.0, 1500.0, vDepth) * uFog);
         c = mix(c, uBg, uSoft * 0.45);
@@ -335,53 +336,106 @@ export class VaultEngine {
 
   private handlePointerDown(e: PointerEvent) {
     this.isInteracting = true;
-    this.pointerPos.set(e.clientX, e.clientY);
+    this.pointerDownPos = { x: e.clientX, y: e.clientY, time: performance.now() };
+    this.pointerCurrentPos = { x: e.clientX, y: e.clientY, inCanvas: e.target === this.canvas };
   }
 
   private handlePointerMove(e: PointerEvent) {
-    this.mouse.x = (e.clientX / this.W) * 2 - 1;
-    this.mouse.y = -(e.clientY / this.H) * 2 + 1;
+    this.pointerCurrentPos = { x: e.clientX, y: e.clientY, inCanvas: e.target === this.canvas };
 
     if (this.isInteracting) {
-      const dy = e.clientY - this.pointerPos.y;
-      this.pointerPos.set(e.clientX, e.clientY);
+      const dy = e.clientY - this.pointerDownPos.y;
+      this.pointerDownPos.y = e.clientY;
       this.targetDist -= dy * 2.2;
       this.targetDist = Math.max(0, Math.min(2200, this.targetDist));
     }
   }
 
-  private handlePointerUp() {
+  private handlePointerUp(e: PointerEvent) {
     this.isInteracting = false;
-  }
+    const dx = Math.abs(e.clientX - this.pointerDownPos.x);
+    const dy = Math.abs(e.clientY - this.pointerDownPos.y);
+    const dt = performance.now() - this.pointerDownPos.time;
 
-  private handleClick() {
-    if (this.hoveredIndex >= 0 && this.data) {
-      const w = this.world[this.hoveredIndex];
-      if (w) {
-        const item = this.data.entries[w.itemIndex];
-        if (item) this.onSelectCallback(item);
+    if (dx < 10 && dy < 10 && dt < 600 && e.target === this.canvas) {
+      const pickedIdx = this.pickInstance(e.clientX, e.clientY);
+      const targetIdx = pickedIdx >= 0 ? pickedIdx : this.hoveredIndex;
+      if (targetIdx >= 0 && this.data) {
+        const w = this.world[targetIdx];
+        if (w) {
+          const item = this.data.entries[w.itemIndex];
+          if (item) this.onSelectCallback(item);
+        }
       }
     }
   }
 
-  private updateHover() {
-    if (!this.mesh || !this.data) return;
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersects = this.raycaster.intersectObject(this.mesh);
+  private pickInstance(clientX: number, clientY: number): number {
+    if (!this.data || this.world.length === 0 || this.W === 0 || this.H === 0) return -1;
+    
+    const focal = this.H / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+    const cx = this.W / 2;
+    const cy = this.H / 2;
+    const D = this.data;
+    const aspect = D.cell[0] / D.cell[1];
 
-    if (intersects.length > 0 && intersects[0].instanceId !== undefined) {
-      const idx = intersects[0].instanceId;
-      if (idx !== this.hoveredIndex) {
-        this.hoveredIndex = idx;
-        this.uniforms.uHover.value = idx;
-        const w = this.world[idx];
-        const item = w ? this.data.entries[w.itemIndex] : null;
-        this.onHoverCallback(item);
+    let bestIdx = -1;
+    let closestZ = -999999;
+
+    const len = this.world.length;
+    for (let i = 0; i < len; i += 2) {
+      const w = this.world[i];
+      const zRel = -w.pos.z - this.camera.position.z;
+      if (zRel <= 10.0 || zRel > 2500.0) continue;
+
+      const pxScale = focal / zRel;
+      const sx = cx + w.pos.x * pxScale;
+      const sy = cy - w.pos.y * pxScale;
+      const sh = w.h * pxScale;
+      const sw = sh * aspect;
+
+      const halfW = Math.max(sw * 0.5, 6.0);
+      const halfH = Math.max(sh * 0.5, 6.0);
+
+      if (
+        clientX >= sx - halfW &&
+        clientX <= sx + halfW &&
+        clientY >= sy - halfH &&
+        clientY <= sy + halfH
+      ) {
+        if (w.pos.z > closestZ) {
+          closestZ = w.pos.z;
+          bestIdx = i;
+        }
       }
-    } else {
+    }
+
+    return bestIdx;
+  }
+
+  private updateHover() {
+    if (!this.pointerCurrentPos.inCanvas) {
       if (this.hoveredIndex !== -1) {
         this.hoveredIndex = -1;
         this.uniforms.uHover.value = -1;
+        this.canvas.style.cursor = 'default';
+        this.onHoverCallback(null);
+      }
+      return;
+    }
+
+    const idx = this.pickInstance(this.pointerCurrentPos.x, this.pointerCurrentPos.y);
+
+    if (idx !== this.hoveredIndex) {
+      this.hoveredIndex = idx;
+      this.uniforms.uHover.value = idx;
+      if (idx >= 0 && this.data) {
+        this.canvas.style.cursor = 'pointer';
+        const w = this.world[idx];
+        const item = w ? this.data.entries[w.itemIndex] : null;
+        this.onHoverCallback(item);
+      } else {
+        this.canvas.style.cursor = 'default';
         this.onHoverCallback(null);
       }
     }
@@ -409,7 +463,6 @@ export class VaultEngine {
   private renderLoop(time: number) {
     if (this.isDestroyed) return;
 
-    const dt = 0.016;
     this.dist += (this.targetDist - this.dist) * 0.08;
     this.softFactor += (this.targetSoft - this.softFactor) * 0.1;
     this.uniforms.uSoft.value = this.softFactor;
@@ -449,7 +502,6 @@ export class VaultEngine {
     window.addEventListener('pointermove', this.handlePointerMove);
     window.addEventListener('pointerdown', this.handlePointerDown);
     window.addEventListener('pointerup', this.handlePointerUp);
-    this.canvas.addEventListener('click', () => this.handleClick());
   }
 
   public destroy() {
