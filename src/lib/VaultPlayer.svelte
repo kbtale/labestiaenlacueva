@@ -94,10 +94,11 @@
         </div>
       </div>
 
-      <div class="p-6 sm:p-7 border-t border-white/10 bg-[#0a0a0d]/60 flex flex-wrap items-center gap-3">
+      <div class="p-6 sm:p-7 bg-[#0a0a0d]/80 flex flex-wrap items-center gap-3 border-0">
         <VaultCapsuleButton
           label="Abrir en YouTube"
           icon="external"
+          variant="primary"
           href={`https://www.youtube.com/watch?v=${selectedItem.id}`}
           target="_blank"
         />
@@ -105,6 +106,7 @@
         <VaultCapsuleButton
           label="Copiar enlace"
           icon="copy"
+          variant="secondary"
           onclick={copyLink}
           isSuccess={copied}
           successLabel="¡Enlace copiado!"

@@ -73,7 +73,7 @@
     <a
       href="/"
       aria-label="La Bestia en la Cueva"
-      class="vault-nav-brand w-9 h-9 rounded-full bg-[#16171c]/90 backdrop-blur-md flex items-center justify-center text-white/90 hover:text-white transition-all shadow-md group"
+      class="vault-nav-brand w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/90 hover:text-white transition-all shadow-md group border-0"
     >
       <svg class="w-5 h-5 text-white/80 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 21h18" />
@@ -85,7 +85,7 @@
     {#if !isAtRest}
       <button
         onclick={onRewind}
-        class="vault-nav-rewind font-mono text-xs font-semibold px-3.5 py-1.5 rounded-full bg-[#16171c]/95 text-white/90 hover:text-white backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer"
+        class="vault-nav-rewind font-mono text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer border-0"
       >
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"></polyline>
@@ -97,7 +97,7 @@
 
   <div class="relative flex items-center justify-center min-w-[280px]">
     <nav
-      class="vault-brand-menu pointer-events-auto flex items-center gap-5 sm:gap-7 bg-[#121316]/90 backdrop-blur-xl px-6 py-2.5 rounded-full shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none absolute'}"
+      class="vault-brand-menu pointer-events-auto flex items-center gap-6 sm:gap-9 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none absolute'}"
     >
       <VaultRollLink label="Mis secciones" onclick={onExplore} />
       <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
@@ -106,12 +106,12 @@
     </nav>
 
     <nav
-      class="vault-filter-bar pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-[#121316]/95 backdrop-blur-xl px-2 py-1.5 rounded-full shadow-xl overflow-x-auto max-w-[70vw] sm:max-w-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-2 scale-95 pointer-events-none absolute' : 'opacity-100 translate-y-0 scale-100'}"
+      class="vault-filter-bar pointer-events-auto flex items-center gap-1.5 bg-[#121316]/95 backdrop-blur-xl px-2.5 py-1.5 rounded-full shadow-2xl overflow-x-auto max-w-[70vw] sm:max-w-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] border-0 {isAtRest ? 'opacity-0 translate-y-2 scale-95 pointer-events-none absolute' : 'opacity-100 translate-y-0 scale-100'}"
     >
       {#each playlists as p}
         <button
           onclick={() => onFilterChange(p.id)}
-          class="vault-filter-pill font-mono text-xs px-3 sm:px-4 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer {activeFilter === p.id ? 'bg-white text-black font-semibold shadow' : 'text-neutral-400 hover:text-white hover:bg-white/5'}"
+          class="vault-filter-pill font-mono text-xs px-3.5 sm:px-4 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer border-0 {activeFilter === p.id ? 'bg-white text-black font-semibold shadow' : 'text-neutral-400 hover:text-white hover:bg-white/10'}"
         >
           {p.label}
         </button>
@@ -119,7 +119,7 @@
     </nav>
   </div>
 
-  <div class="pointer-events-auto hidden md:flex items-center gap-2 bg-[#121316]/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl">
+  <div class="pointer-events-auto hidden md:flex items-center gap-3">
     {#each socials as s}
       <a
         href={s.url}
@@ -127,7 +127,7 @@
         rel="noopener noreferrer"
         aria-label={s.name}
         title={s.name}
-        class="vault-social-link p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+        class="vault-social-link p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-full transition-colors border-0"
       >
         <svg
           class="w-4 h-4"
@@ -157,7 +157,7 @@
     <p>
       Este espacio es un archivo vivo de reflexiones visuales, arte, filosofía y cine. Investigamos las obras y debates que desafían el ruido contemporáneo para rescatar el peso de la imagen y la fuerza del lenguaje cinematográfico.
     </p>
-    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+    <div class="p-4 rounded-2xl bg-white/5 space-y-2 border-0">
       <div class="text-[11px] uppercase tracking-widest text-neutral-400">Colecciones Principales</div>
       <div class="text-white">1. Vídeos que Pondría en un Museo</div>
       <div class="text-white">2. Vídeos de los que todos deberíamos estar hablando</div>
@@ -176,7 +176,7 @@
         href={s.url}
         target="_blank"
         rel="noopener noreferrer"
-        class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all text-neutral-200 hover:text-white group"
+        class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all text-neutral-200 hover:text-white group border-0"
       >
         <span class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -201,14 +201,14 @@
     <p>
       Para propuestas editoriales, proyectos audiovisuales, curaduría o charlas críticas, puedes comunicarte por los siguientes canales directos:
     </p>
-    <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+    <div class="p-4 rounded-2xl bg-white/5 flex items-center justify-between border-0">
       <div>
         <div class="text-[10px] uppercase tracking-wider text-neutral-400">Correo Electrónico</div>
         <div class="text-white text-sm font-semibold select-all">contacto@labestiaenlacueva.com</div>
       </div>
       <a
         href="mailto:contacto@labestiaenlacueva.com"
-        class="px-3.5 py-1.5 rounded-full bg-white text-black font-semibold text-[11px] hover:bg-white/90 transition-colors"
+        class="px-3.5 py-1.5 rounded-full bg-white text-black font-semibold text-[11px] hover:bg-white/90 transition-colors border-0"
       >
         Escribir
       </a>

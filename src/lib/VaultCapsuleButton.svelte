@@ -2,6 +2,7 @@
   interface Props {
     label: string;
     icon?: 'arrow-down' | 'external' | 'copy' | 'arrow-right';
+    variant?: 'primary' | 'secondary' | 'minimal';
     href?: string;
     onclick?: (e: MouseEvent) => void;
     target?: string;
@@ -13,6 +14,7 @@
   let {
     label,
     icon = 'arrow-down',
+    variant = 'primary',
     href,
     onclick,
     target,
@@ -22,6 +24,20 @@
   }: Props = $props();
 
   let activeLabel = $derived(isSuccess && successLabel ? successLabel : label);
+
+  const baseStyles = 'group relative inline-flex items-center justify-center font-mono uppercase tracking-wider select-none border-0 outline-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer active:scale-95';
+
+  const variantStyles = $derived(
+    variant === 'primary'
+      ? 'h-11 px-6 gap-3.5 rounded-full bg-white text-black font-bold text-xs shadow-[0_10px_30px_rgba(255,255,255,0.18)] hover:bg-[#eaeaea] hover:shadow-[0_15px_35px_rgba(255,255,255,0.3)]'
+      : variant === 'secondary'
+        ? 'h-10 px-5 gap-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs backdrop-blur-md'
+        : 'h-9 px-2 gap-2 bg-transparent text-white/90 hover:text-white font-semibold text-xs'
+  );
+
+  const iconColor = $derived(
+    variant === 'primary' ? 'text-black' : 'text-white'
+  );
 </script>
 
 {#if href}
@@ -29,24 +45,20 @@
     {href}
     {target}
     {onclick}
-    class="vault-capsule-button group relative inline-flex items-center justify-between h-10 px-5 pr-12 rounded-full overflow-hidden text-xs font-mono tracking-widest uppercase text-white/90 hover:text-white transition-colors duration-200 select-none {className}"
+    class="vault-capsule-button {baseStyles} {variantStyles} {className}"
   >
-    <span
-      class="vault-capsule-backdrop absolute inset-0 rounded-full bg-[#14151a] transition-all duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-7 group-hover:h-7 group-hover:right-1.5 group-hover:top-1.5 group-hover:left-auto group-hover:bottom-auto group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-    ></span>
-
     <span class="vault-capsule-label relative z-10 whitespace-nowrap">
       {activeLabel}
     </span>
 
-    <span class="vault-capsule-icon-stage absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+    <span class="vault-capsule-icon-stage relative w-4 h-4 flex items-center justify-center overflow-hidden shrink-0">
       {#if icon === 'arrow-down'}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -54,11 +66,11 @@
           <polyline points="19 12 12 19 5 12"></polyline>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -top-6 text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -top-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -67,11 +79,11 @@
         </svg>
       {:else if icon === 'external'}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:-translate-y-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:-translate-y-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -79,11 +91,11 @@
           <polyline points="7 7 17 7 17 17"></polyline>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -left-6 bottom-[-24px] text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:-translate-y-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -left-5 top-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:-translate-y-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -92,11 +104,11 @@
         </svg>
       {:else if icon === 'copy'}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -104,11 +116,11 @@
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -left-6 text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -left-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -117,11 +129,11 @@
         </svg>
       {:else}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -129,11 +141,11 @@
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -left-6 text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -left-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -147,24 +159,20 @@
   <button
     type="button"
     {onclick}
-    class="vault-capsule-button group relative inline-flex items-center justify-between h-10 px-5 pr-12 rounded-full overflow-hidden text-xs font-mono tracking-widest uppercase text-white/90 hover:text-white transition-colors duration-200 select-none bg-transparent border-0 cursor-pointer active:scale-95 {className}"
+    class="vault-capsule-button {baseStyles} {variantStyles} {className}"
   >
-    <span
-      class="vault-capsule-backdrop absolute inset-0 rounded-full bg-[#14151a] transition-all duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-7 group-hover:h-7 group-hover:right-1.5 group-hover:top-1.5 group-hover:left-auto group-hover:bottom-auto group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-    ></span>
-
     <span class="vault-capsule-label relative z-10 whitespace-nowrap">
       {activeLabel}
     </span>
 
-    <span class="vault-capsule-icon-stage absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+    <span class="vault-capsule-icon-stage relative w-4 h-4 flex items-center justify-center overflow-hidden shrink-0">
       {#if icon === 'arrow-down'}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -172,11 +180,11 @@
           <polyline points="19 12 12 19 5 12"></polyline>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -top-6 text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -top-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-y-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -185,11 +193,11 @@
         </svg>
       {:else if icon === 'external'}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:-translate-y-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:-translate-y-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -197,11 +205,11 @@
           <polyline points="7 7 17 7 17 17"></polyline>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -left-6 bottom-[-24px] text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:-translate-y-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -left-5 top-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:-translate-y-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -210,11 +218,11 @@
         </svg>
       {:else if icon === 'copy'}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -222,11 +230,11 @@
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -left-6 text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -left-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -235,11 +243,11 @@
         </svg>
       {:else}
         <svg
-          class="w-3.5 h-3.5 text-white/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-0"
+          class="w-3.5 h-3.5 {iconColor} transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
@@ -247,11 +255,11 @@
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
         <svg
-          class="w-3.5 h-3.5 absolute -left-6 text-black opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-6 group-hover:opacity-100"
+          class="w-3.5 h-3.5 absolute -left-5 {iconColor} opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu group-hover:translate-x-5 group-hover:opacity-100"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         >
