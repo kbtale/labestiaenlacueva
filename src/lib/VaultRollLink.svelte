@@ -24,7 +24,7 @@
     {target}
     {onclick}
     aria-label={label}
-    class="vault-roll-link group relative inline-flex items-center text-[13px] font-bold tracking-[0.16em] uppercase font-mono text-neutral-300 hover:text-white transition-colors duration-200 select-none {className}"
+    class="vault-roll-link group relative inline-flex items-center text-[13px] font-bold tracking-[0.16em] uppercase font-ui text-neutral-300 hover:text-white transition-colors duration-200 select-none {className}"
   >
     <span class="inline-flex overflow-hidden h-[1.3em] leading-[1.3em]">
       {#each chars as char, i}
@@ -54,7 +54,7 @@
     type="button"
     {onclick}
     aria-label={label}
-    class="vault-roll-link group relative inline-flex items-center text-[13px] font-bold tracking-[0.16em] uppercase font-mono text-neutral-300 hover:text-white transition-colors duration-200 select-none bg-transparent border-0 p-0 cursor-pointer {className}"
+    class="vault-roll-link group relative inline-flex items-center text-[13px] font-bold tracking-[0.16em] uppercase font-ui text-neutral-300 hover:text-white transition-colors duration-200 select-none bg-transparent border-0 p-0 cursor-pointer {className}"
   >
     <span class="inline-flex overflow-hidden h-[1.3em] leading-[1.3em]">
       {#each chars as char, i}

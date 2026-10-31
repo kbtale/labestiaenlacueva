@@ -94,7 +94,7 @@
         </div>
       </div>
 
-      <div class="p-6 sm:p-7 bg-[#0a0a0d]/80 flex flex-wrap items-center gap-3 border-0">
+      <div class="sticky bottom-0 z-20 p-6 sm:p-7 bg-[#0a0a0d]/95 backdrop-blur-xl flex flex-wrap items-center gap-3 border-0">
         <VaultCapsuleButton
           label="Abrir en YouTube"
           icon="external"

@@ -32,7 +32,7 @@
       class="vault-drawer-card relative z-10 w-full max-w-lg bg-[#0e0f14]/98 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-2xl flex flex-col gap-6 animate-in zoom-in-95 duration-200 border-0"
     >
       <div class="flex items-center justify-between pb-2 border-0">
-        <h3 class="font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">
+        <h3 class="font-ui text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
           {title}
         </h3>
         <button

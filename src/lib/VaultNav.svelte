@@ -85,7 +85,7 @@
     {#if !isAtRest}
       <button
         onclick={onRewind}
-        class="vault-nav-rewind font-mono text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer border-0"
+        class="vault-nav-rewind font-ui text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer border-0"
       >
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"></polyline>
@@ -111,7 +111,7 @@
       {#each playlists as p}
         <button
           onclick={() => onFilterChange(p.id)}
-          class="vault-filter-pill font-mono text-xs px-3.5 sm:px-4 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer border-0 {activeFilter === p.id ? 'bg-white text-black font-semibold shadow' : 'text-neutral-400 hover:text-white hover:bg-white/10'}"
+          class="vault-filter-pill font-ui text-xs px-3.5 sm:px-4 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer border-0 {activeFilter === p.id ? 'bg-white text-black font-semibold shadow' : 'text-neutral-400 hover:text-white hover:bg-white/10'}"
         >
           {p.label}
         </button>
@@ -150,17 +150,17 @@
   title="Sobre mí / Manifiesto"
   onClose={() => activeModal = null}
 >
-  <div class="space-y-4 font-mono text-xs text-neutral-300 leading-relaxed">
+  <div class="space-y-4 font-ui text-xs text-neutral-300 leading-relaxed">
     <p class="text-sm font-semibold text-white">
       La Bestia en la Cueva — Archivo de Crítica Visual y Cinematográfica
     </p>
-    <p>
+    <p class="font-body text-sm text-neutral-300 leading-relaxed">
       Este espacio es un archivo vivo de reflexiones visuales, arte, filosofía y cine. Investigamos las obras y debates que desafían el ruido contemporáneo para rescatar el peso de la imagen y la fuerza del lenguaje cinematográfico.
     </p>
     <div class="p-4 rounded-2xl bg-white/5 space-y-2 border-0">
-      <div class="text-[11px] uppercase tracking-widest text-neutral-400">Colecciones Principales</div>
-      <div class="text-white">1. Vídeos que Pondría en un Museo</div>
-      <div class="text-white">2. Vídeos de los que todos deberíamos estar hablando</div>
+      <div class="text-[11px] uppercase tracking-widest text-neutral-400 font-ui font-semibold">Colecciones Principales</div>
+      <div class="text-white font-ui text-xs">1. Vídeos que Pondría en un Museo</div>
+      <div class="text-white font-ui text-xs">2. Vídeos de los que todos deberíamos estar hablando</div>
     </div>
   </div>
 </VaultDrawer>
@@ -184,8 +184,8 @@
           </svg>
         </span>
         <span class="flex flex-col">
-          <span class="font-mono text-xs font-semibold text-white">{s.name}</span>
-          <span class="font-mono text-[10px] text-neutral-400">{s.handle}</span>
+          <span class="font-ui text-xs font-semibold text-white">{s.name}</span>
+          <span class="font-ui text-[10px] text-neutral-400">{s.handle}</span>
         </span>
       </a>
     {/each}
@@ -197,23 +197,23 @@
   title="Contacto y Colaboraciones"
   onClose={() => activeModal = null}
 >
-  <div class="space-y-4 font-mono text-xs text-neutral-300">
-    <p>
+  <div class="space-y-4 font-ui text-xs text-neutral-300">
+    <p class="font-body text-sm leading-relaxed text-neutral-300">
       Para propuestas editoriales, proyectos audiovisuales, curaduría o charlas críticas, puedes comunicarte por los siguientes canales directos:
     </p>
     <div class="p-4 rounded-2xl bg-white/5 flex items-center justify-between border-0">
       <div>
-        <div class="text-[10px] uppercase tracking-wider text-neutral-400">Correo Electrónico</div>
-        <div class="text-white text-sm font-semibold select-all">contacto@labestiaenlacueva.com</div>
+        <div class="text-[10px] uppercase tracking-wider text-neutral-400 font-ui">Correo Electrónico</div>
+        <div class="text-white text-sm font-semibold select-all font-ui">contacto@labestiaenlacueva.com</div>
       </div>
       <a
         href="mailto:contacto@labestiaenlacueva.com"
-        class="px-3.5 py-1.5 rounded-full bg-white text-black font-semibold text-[11px] hover:bg-white/90 transition-colors border-0"
+        class="px-3.5 py-1.5 rounded-full bg-white text-black font-ui font-semibold text-[11px] hover:bg-white/90 transition-colors border-0"
       >
         Escribir
       </a>
     </div>
-    <p class="text-[11px] text-neutral-400">
+    <p class="text-[11px] text-neutral-400 font-ui">
       También puedes contactar directamente a través del servidor oficial de Discord.
     </p>
   </div>

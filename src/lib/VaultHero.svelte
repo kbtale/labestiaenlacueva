@@ -30,6 +30,7 @@
         <VaultCapsuleButton
           label="Explorar colecciones"
           icon="arrow-down"
+          variant="solid"
           onclick={onExplore}
         />
       </div>
