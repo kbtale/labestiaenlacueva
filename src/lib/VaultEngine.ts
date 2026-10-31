@@ -54,6 +54,51 @@ const RUNWAY = {
 
 const VORTEX_RADIUS = 150.0;
 const CYCLE_PERIOD = 1384.0;
+const PXB = 5.5e6;
+
+const SLICE_WORKER_CODE = `self.onmessage = async (e) => {
+  const { id, url, strip } = e.data;
+  try {
+    const res = await fetch(url);
+    const total = +res.headers.get("Content-Length") || 0;
+    const rd = res.body && res.body.getReader();
+    const parts = [];
+    let got = 0;
+    if (rd) {
+      for (;;) {
+        const { done, value } = await rd.read();
+        if (done) break;
+        parts.push(value);
+        got += value.length;
+        if (total) self.postMessage({ id, p: [got, total] });
+      }
+    }
+    const blob = rd ? new Blob(parts) : await res.blob();
+    const bmp = await createImageBitmap(blob, { imageOrientation: "flipY", premultiplyAlpha: "none", colorSpaceConversion: "none" });
+    const W = bmp.width;
+    const H = bmp.height;
+    const n = Math.floor(Math.log2(Math.max(W, H)));
+    const levels = [];
+    const tr = [];
+    let lvl = bmp;
+    for (let l = 0; l <= n; l++) {
+      if (l) lvl = await createImageBitmap(lvl, { resizeWidth: Math.max(1, W >> l), resizeHeight: Math.max(1, H >> l), resizeQuality: "medium" });
+      const w = lvl.width;
+      const h = lvl.height;
+      const rows = Math.max(1, Math.floor(strip / (w * 4)));
+      const subParts = [];
+      for (let y = 0; y < h; y += rows) {
+        const s = await createImageBitmap(lvl, 0, y, w, Math.min(rows, h - y));
+        subParts.push([y, s]);
+        tr.push(s);
+      }
+      levels.push(subParts);
+    }
+    self.postMessage({ id, W, H, levels }, tr);
+  } catch (err) {
+    self.postMessage({ id, err: String(err) });
+  }
+};`;
 
 export class VaultEngine {
   private canvas: HTMLCanvasElement;
@@ -113,6 +158,12 @@ export class VaultEngine {
   private m4 = new THREE.Matrix4();
   private qI = new THREE.Quaternion();
   private vS = new THREE.Vector3();
+
+  private sliceJobs: Array<{
+    glTex: WebGLTexture;
+    list: Array<[number, number, ImageBitmap]>;
+    isBaseLevel: boolean;
+  }> = [];
 
   private world: Array<{
     pos: THREE.Vector3;
@@ -197,12 +248,104 @@ export class VaultEngine {
     if (!this.data) return;
     const isSmall = Math.min(window.innerWidth, window.innerHeight) * this.dpr < 1200;
     const src = isSmall ? '/atlas/archive-0-sm.webp' : '/atlas/archive-0.webp';
+    const tileW = isSmall ? 128 : 256;
+    const tileH = isSmall ? 96 : 192;
+    this.uniforms.uTilePx.value.set(tileW, tileH);
+
+    const gl = this.renderer.getContext();
+    const isWebGL2 = this.renderer.capabilities.isWebGL2;
+
+    if (isWebGL2 && typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined') {
+      try {
+        const workerBlob = new Blob([SLICE_WORKER_CODE], { type: 'text/javascript' });
+        const workerUrl = URL.createObjectURL(workerBlob);
+        const worker = new Worker(workerUrl);
+
+        const data = await new Promise<{ W: number; H: number; levels: Array<Array<[number, ImageBitmap]>> } | null>((resolve) => {
+          worker.onmessage = (e) => {
+            if (e.data.p && this.onProgressCallback) {
+              const [got, total] = e.data.p;
+              this.onProgressCallback(0.45 + (got / total) * 0.4);
+            } else if (e.data.levels) {
+              resolve(e.data);
+            } else {
+              resolve(null);
+            }
+          };
+          worker.postMessage({ id: 1, url: src, strip: 1048576 });
+        });
+
+        if (data && data.levels) {
+          const glTex = gl.createTexture()!;
+          const st = this.renderer.state;
+          const n = data.levels.length;
+          st.bindTexture(gl.TEXTURE_2D, glTex);
+          gl.texStorage2D(gl.TEXTURE_2D, n, gl.RGBA8, data.W, data.H);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, 1);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, n - 1);
+          st.unbindTexture();
+
+          const tex = new THREE.Texture();
+          tex.image = { width: data.W, height: data.H };
+          tex.flipY = false;
+          const props = this.renderer.properties.get(tex);
+          props.__webglTexture = glTex;
+          props.__webglInit = true;
+          this.uniforms.uMap.value = tex;
+
+          const smallStrips: Array<[number, number, ImageBitmap]> = [];
+          for (let l = n - 1; l >= 1; l--) {
+            for (const [y, b] of data.levels[l]) {
+              smallStrips.push([l, y, b]);
+            }
+          }
+          this.sliceJobs.push({ glTex, list: smallStrips, isBaseLevel: false });
+
+          const baseStrips: Array<[number, number, ImageBitmap]> = [];
+          for (const [y, b] of data.levels[0]) {
+            baseStrips.push([0, y, b]);
+          }
+          this.sliceJobs.push({ glTex, list: baseStrips, isBaseLevel: true });
+          return;
+        }
+      } catch {}
+    }
+
     const loader = new THREE.TextureLoader();
     const tex = await loader.loadAsync(src);
     tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     tex.minFilter = THREE.LinearMipmapLinearFilter;
     tex.generateMipmaps = true;
     this.uniforms.uMap.value = tex;
+  }
+
+  private drainSliceJobs() {
+    if (!this.sliceJobs.length) return;
+    const job = this.sliceJobs[0];
+    if (!job.list.length) {
+      this.sliceJobs.shift();
+      return;
+    }
+
+    const gl = this.renderer.getContext();
+    const st = this.renderer.state;
+    const [l, y, b] = job.list.shift()!;
+
+    st.bindTexture(gl.TEXTURE_2D, job.glTex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texSubImage2D(gl.TEXTURE_2D, l, 0, y, b.width, b.height, gl.RGBA, gl.UNSIGNED_BYTE, b);
+    try { b.close(); } catch {}
+
+    if (!job.list.length && job.isBaseLevel) {
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, 0);
+      this.sliceJobs.shift();
+    }
+    st.unbindTexture();
   }
 
   private buildMesh() {
@@ -590,6 +733,11 @@ export class VaultEngine {
     const cr = this.canvas.getBoundingClientRect();
     this.W = Math.round(cr.width) || window.innerWidth;
     this.H = Math.round(cr.height) || window.innerHeight;
+
+    const gl = this.renderer.getContext();
+    const vp = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+    const mx = Math.min(vp[0], vp[1], gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+    this.renderer.setPixelRatio(Math.max(0.5, Math.min(this.dpr, mx / this.W, mx / this.H, Math.sqrt(PXB / (this.W * this.H)))));
     this.renderer.setSize(this.W, this.H, false);
     this.camera.aspect = this.W / this.H;
     this.stage(1.0);
@@ -814,6 +962,8 @@ export class VaultEngine {
 
     const dt = Math.min(0.1, (time - this.lastTime) * 0.001 || 0.016);
     this.lastTime = time;
+
+    this.drainSliceJobs();
 
     if (this.rewind) {
       const elapsed = (time - this.rewind.t0) / this.rewind.dur;
