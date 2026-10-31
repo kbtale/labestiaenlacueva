@@ -46,14 +46,22 @@
   ];
 </script>
 
-<header class="fixed top-0 left-0 right-0 z-30 pointer-events-none p-5 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4">
+<header class="fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-between gap-4">
   <div class="pointer-events-auto flex items-center gap-3">
-    <h1 class="font-display text-2xl sm:text-3xl text-white tracking-wide hover:opacity-90 transition-opacity">
-      La Bestia en la Cueva
-    </h1>
+    <a
+      href="/"
+      aria-label="La Bestia en la Cueva"
+      class="w-9 h-9 rounded-full bg-[#16171c]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 hover:text-white hover:border-white/30 transition-all shadow-md group"
+    >
+      <svg class="w-5 h-5 text-white/80 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18" />
+        <path d="M5 21V7l7-4 7 4v14" />
+        <path d="M9 14a3 3 0 0 0 6 0" />
+      </svg>
+    </a>
   </div>
 
-  <nav class="pointer-events-auto flex items-center gap-1.5 sm:gap-2 bg-[#121316]/75 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-lg overflow-x-auto max-w-full">
+  <nav class="pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-[#121316]/80 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-xl overflow-x-auto max-w-[70vw] sm:max-w-none">
     {#each playlists as p}
       <button
         onclick={() => onFilterChange(p.id)}
@@ -64,7 +72,7 @@
     {/each}
   </nav>
 
-  <div class="pointer-events-auto hidden md:flex items-center gap-2 bg-[#121316]/75 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+  <div class="pointer-events-auto hidden md:flex items-center gap-2 bg-[#121316]/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl">
     {#each socials as s}
       <a
         href={s.url}

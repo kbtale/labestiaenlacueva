@@ -7,18 +7,33 @@
     isDrawerOpen?: boolean;
     onHover?: (item: ArchiveItem | null) => void;
     onSelect?: (item: ArchiveItem) => void;
+    onDistChange?: (dist: number) => void;
+    onProgress?: (progress: number) => void;
   }
 
-  let { activeFilter = null, isDrawerOpen = false, onHover, onSelect }: Props = $props();
+  let {
+    activeFilter = null,
+    isDrawerOpen = false,
+    onHover,
+    onSelect,
+    onDistChange,
+    onProgress
+  }: Props = $props();
 
   let canvasEl: HTMLCanvasElement;
   let engine: VaultEngine | null = null;
+
+  export function flyTo(target: number) {
+    engine?.flyTo(target);
+  }
 
   onMount(() => {
     engine = new VaultEngine(
       canvasEl,
       (item) => onHover?.(item),
-      (item) => onSelect?.(item)
+      (item) => onSelect?.(item),
+      (dist) => onDistChange?.(dist),
+      (p) => onProgress?.(p)
     );
   });
 

@@ -24,6 +24,13 @@ interface ArchiveDataset {
   seq: number[];
 }
 
+function flow(x: number, y: number, t: number): [number, number] {
+  return [
+    Math.sin(y * 0.045 + t * 0.35) + 0.6 * Math.sin((x + y) * 0.03 - t * 0.27),
+    Math.cos(x * 0.045 - t * 0.31) + 0.6 * Math.cos((x - y) * 0.03 + t * 0.23)
+  ];
+}
+
 export class VaultEngine {
   private canvas: HTMLCanvasElement;
   private renderer: THREE.WebGLRenderer;
@@ -34,6 +41,8 @@ export class VaultEngine {
   private mesh: THREE.InstancedMesh | null = null;
   private onHoverCallback: (item: ArchiveItem | null) => void;
   private onSelectCallback: (item: ArchiveItem) => void;
+  private onDistChangeCallback?: (dist: number) => void;
+  private onProgressCallback?: (progress: number) => void;
   
   private W = 0;
   private H = 0;
@@ -49,6 +58,7 @@ export class VaultEngine {
   private targetSoft = 0;
   private isDestroyed = false;
   private rafId = 0;
+  private introTime = 0;
   
   private world: Array<{
     pos: THREE.Vector3;
@@ -58,7 +68,10 @@ export class VaultEngine {
     hs: number;
     itemIndex: number;
     isSubject: boolean;
+    float?: [number, number, number, number, number];
   }> = [];
+
+  private floaters: number[] = [];
 
   private uniforms = {
     uShift: { value: 0 },
@@ -76,11 +89,15 @@ export class VaultEngine {
   constructor(
     canvas: HTMLCanvasElement,
     onHover: (item: ArchiveItem | null) => void,
-    onSelect: (item: ArchiveItem) => void
+    onSelect: (item: ArchiveItem) => void,
+    onDistChange?: (dist: number) => void,
+    onProgress?: (progress: number) => void
   ) {
     this.canvas = canvas;
     this.onHoverCallback = onHover;
     this.onSelectCallback = onSelect;
+    this.onDistChangeCallback = onDistChange;
+    this.onProgressCallback = onProgress;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     this.renderer = new THREE.WebGLRenderer({
@@ -111,11 +128,16 @@ export class VaultEngine {
 
   private async init() {
     try {
+      this.onProgressCallback?.(0.15);
       const resp = await fetch('/data/archive.json');
       this.data = (await resp.json()) as ArchiveDataset;
+      this.onProgressCallback?.(0.45);
       await this.loadAtlasTexture();
+      this.onProgressCallback?.(0.85);
       this.buildMesh();
       this.handleResize();
+      this.introTime = performance.now();
+      this.onProgressCallback?.(1.0);
       this.rafId = requestAnimationFrame(this.renderLoop);
     } catch {}
   }
@@ -248,6 +270,7 @@ export class VaultEngine {
     const vS = new THREE.Vector3();
 
     this.world = [];
+    this.floaters = [];
     const entries = D.entries;
     const entryCount = entries.length;
 
@@ -283,6 +306,16 @@ export class VaultEngine {
         -d
       );
 
+      const isSubject = c[9] === 0;
+      const isHalo = c[9] === 1 || (c[8] ?? 1) < 0.6;
+      let floatData: [number, number, number, number, number] | undefined;
+
+      if (isHalo) {
+        const seed = (i * 137.5) % 1;
+        floatData = [0.04 + seed * 0.05, 0, seed, i * 0.35, 18 + seed * 25];
+        this.floaters.push(i);
+      }
+
       this.world.push({
         pos: pos.clone(),
         base: pos.clone(),
@@ -290,7 +323,8 @@ export class VaultEngine {
         h0,
         hs,
         itemIndex: entryIdx,
-        isSubject: c[9] === 0
+        isSubject,
+        float: floatData
       });
 
       vS.set(h, h, 1);
@@ -460,10 +494,50 @@ export class VaultEngine {
     this.targetSoft = soft ? 1 : 0;
   }
 
+  public flyTo(target: number) {
+    this.targetDist = Math.max(0, Math.min(2200, target));
+  }
+
+  private updateHaloFloaters(now: number) {
+    if (!this.mesh || this.dist > 300) return;
+    const t = now * 0.001;
+    const m4 = new THREE.Matrix4();
+    const qI = new THREE.Quaternion();
+    const vS = new THREE.Vector3();
+    const attrDim = this.mesh.geometry.getAttribute('aDim') as THREE.InstancedBufferAttribute;
+
+    for (let j = 0; j < this.floaters.length; j += 2) {
+      const i = this.floaters[j];
+      const w = this.world[i];
+      if (!w.float) continue;
+
+      const f = w.float;
+      const u = (t * f[0] + f[2]) % 1;
+      const out = Math.pow(1 - u, 1.6);
+      const sw = flow(w.base.x * 0.01, w.base.y * 0.01, t + f[3]);
+      const r0 = f[4];
+
+      w.pos.x = w.base.x + sw[0] * out * r0;
+      w.pos.y = w.base.y + sw[1] * out * r0;
+
+      const dim = Math.min(1, u / 0.3) * (1 - Math.max(0, (u - 0.8) / 0.2) * 0.85);
+      if (attrDim) attrDim.setX(i, dim);
+
+      vS.set(w.h, w.h, 1);
+      m4.compose(w.pos, qI, vS);
+      this.mesh.setMatrixAt(i, m4);
+    }
+
+    this.mesh.instanceMatrix.needsUpdate = true;
+    if (attrDim) attrDim.needsUpdate = true;
+  }
+
   private renderLoop(time: number) {
     if (this.isDestroyed) return;
 
     this.dist += (this.targetDist - this.dist) * 0.08;
+    this.onDistChangeCallback?.(this.dist);
+
     this.softFactor += (this.targetSoft - this.softFactor) * 0.1;
     this.uniforms.uSoft.value = this.softFactor;
     this.uniforms.uTime.value = time * 0.001;
@@ -491,6 +565,7 @@ export class VaultEngine {
       this.mesh.instanceMatrix.needsUpdate = true;
     }
 
+    this.updateHaloFloaters(time);
     this.updateHover();
     this.renderer.render(this.scene, this.camera);
     this.rafId = requestAnimationFrame(this.renderLoop);
