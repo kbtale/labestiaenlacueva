@@ -87,7 +87,7 @@
 
 <header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-center min-h-[72px] sm:min-h-[80px]">
   <nav
-    class="vault-brand-menu pointer-events-auto flex items-center gap-6 sm:gap-9 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}"
+    class="vault-brand-menu flex items-center gap-6 sm:gap-9 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-5 scale-[0.96] pointer-events-none'}"
   >
     <VaultRollLink label="Mis secciones" onclick={() => activeModal = 'sections'} />
     <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
@@ -97,7 +97,17 @@
 </header>
 
 <div
-  class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-12 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
+  class="fixed top-5 left-5 z-30 flex sm:hidden items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
+>
+  <VaultCapsuleButton
+    label="Volver"
+    icon="rewind"
+    onclick={onRewind}
+  />
+</div>
+
+<div
+  class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 hidden sm:flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-12 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
 >
   <VaultCapsuleButton
     label="Volver"
@@ -109,29 +119,29 @@
 <VaultDrawer
   open={activeModal === 'sections'}
   title="Mis Secciones / Archivo Directo"
-  subtitle="Explora y reproduce directamente las colecciones"
+  subtitle="Selecciona una colección para explorar"
   maxWidth="max-w-2xl"
   onClose={() => activeModal = null}
 >
   <div class="space-y-6">
-    <div class="flex flex-wrap gap-2 pb-2 border-b border-white/5">
+    <div class="flex flex-wrap gap-2 pb-3 border-b border-white/5">
       {#each sectionKeys as key}
         <button
           type="button"
           onclick={() => selectedSection = key}
-          class="px-3.5 py-1.5 rounded-full text-xs font-ui font-medium transition-all duration-200 border-0 cursor-pointer {selectedSection === key ? 'bg-white text-black font-semibold' : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10'}"
+          class="px-4 py-2 rounded-full text-xs font-ui transition-all duration-200 border-0 cursor-pointer {selectedSection === key ? 'bg-white text-black font-semibold' : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 font-medium'}"
         >
           {key}
         </button>
       {/each}
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1 overscroll-contain">
       {#each filteredVideos as v}
         <button
           type="button"
           onclick={() => pickVideo(v)}
-          class="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left border border-white/5 hover:border-white/20 group cursor-pointer"
+          class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left border border-white/5 hover:border-white/20 group cursor-pointer"
         >
           <img
             src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
@@ -151,11 +161,6 @@
           </div>
         </button>
       {/each}
-    </div>
-
-    <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-ui text-neutral-400">
-      <span>Próximamente: Archivo de Libros y Ensayos</span>
-      <span class="px-2 py-0.5 rounded bg-white/5 text-neutral-400">En desarrollo</span>
     </div>
   </div>
 </VaultDrawer>

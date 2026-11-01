@@ -56,7 +56,7 @@
     <div class="relative w-28 h-36 sm:w-32 sm:h-40 flex items-center justify-center transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] {isFading ? 'scale-105' : 'scale-100'}">
       <VaultCharacter
         progress={shown}
-        class="w-full h-full text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-300"
+        class="w-full h-full text-white transition-all duration-300"
       />
     </div>
 

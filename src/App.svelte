@@ -10,6 +10,8 @@
   let canvasComponent: { flyTo: (target: number) => void; rewindToStart: () => void; startIntro: () => void } | null = $state(null);
   let activeFilter = $state<string | null>(null);
   let hoveredItem = $state<ArchiveItem | null>(null);
+  let hoveredPos = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+  let activeRunwayItem = $state<ArchiveItem | null>(null);
   let selectedItem = $state<ArchiveItem | null>(null);
   let currentDist = $state(0);
   let loadProgress = $state(0.05);
@@ -18,8 +20,9 @@
     activeFilter = filter;
   }
 
-  function handleHover(item: ArchiveItem | null) {
+  function handleHover(item: ArchiveItem | null, pos?: { x: number; y: number }) {
     hoveredItem = item;
+    if (pos) hoveredPos = pos;
   }
 
   function handleSelect(item: ArchiveItem) {
@@ -30,8 +33,9 @@
     selectedItem = null;
   }
 
-  function handleDistChange(dist: number) {
+  function handleDistChange(dist: number, activeItem?: ArchiveItem | null) {
     currentDist = dist;
+    if (activeItem !== undefined) activeRunwayItem = activeItem;
   }
 
   function handleProgress(p: number) {
@@ -79,6 +83,9 @@
 
   <VaultHud
     {hoveredItem}
+    mousePos={hoveredPos}
+    {activeRunwayItem}
+    dist={currentDist}
   />
 
   <VaultPlayer

@@ -5,9 +5,9 @@
   interface Props {
     activeFilter?: string | null;
     isDrawerOpen?: boolean;
-    onHover?: (item: ArchiveItem | null) => void;
+    onHover?: (item: ArchiveItem | null, pos?: { x: number; y: number }) => void;
     onSelect?: (item: ArchiveItem) => void;
-    onDistChange?: (dist: number) => void;
+    onDistChange?: (dist: number, activeItem?: ArchiveItem | null) => void;
     onProgress?: (progress: number) => void;
   }
 
@@ -38,9 +38,9 @@
   onMount(() => {
     engine = new VaultEngine(
       canvasEl,
-      (item) => onHover?.(item),
+      (item, pos) => onHover?.(item, pos),
       (item) => onSelect?.(item),
-      (dist) => onDistChange?.(dist),
+      (dist, activeItem) => onDistChange?.(dist, activeItem),
       (p) => onProgress?.(p)
     );
   });
