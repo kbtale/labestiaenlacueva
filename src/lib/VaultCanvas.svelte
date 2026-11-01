@@ -74,3 +74,7 @@
   bind:this={canvasEl}
   class="fixed inset-0 w-full h-full block touch-none z-0 bg-[#0a0a0b]"
 ></canvas>
+<div
+  class="fixed inset-0 pointer-events-none z-[1] select-none"
+  style="background: radial-gradient(ellipse at 50% 50%, rgba(10, 10, 11, 0) 48%, rgba(6, 7, 9, 0.38) 78%, rgba(3, 4, 6, 0.75) 100%);"
+></div>

@@ -130,6 +130,10 @@ export class VaultEngine {
   private fr = { cx: 0, cy: 0, w: 0, h: 0, ready: false };
   private isDrawerOpen = false;
   private isSectionModalOpen = false;
+  private caveMesh: THREE.Mesh | null = null;
+  private caveDust: THREE.Points | null = null;
+  private caveDustPositions: Float32Array | null = null;
+  private caveDustVelocities: Float32Array | null = null;
 
   private hoveredIndex = -1;
   private activeFilter: string | null = null;
@@ -251,6 +255,7 @@ export class VaultEngine {
       await this.loadAtlasTexture();
       this.onProgressCallback?.(0.85);
       this.buildMesh();
+      this.buildCave();
       this.handleResize();
       this.onProgressCallback?.(1.0);
       this.rafId = requestAnimationFrame(this.renderLoop);
@@ -583,6 +588,220 @@ export class VaultEngine {
     this.updateRunway();
     this.flush();
     this.field.add(this.mesh);
+  }
+
+  private buildCave() {
+    const caveGeo = new THREE.CylinderGeometry(280, 280, 3600, 36, 32, true);
+    caveGeo.rotateX(Math.PI / 2);
+
+    const caveVert = `
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      varying vec2 vUv;
+      
+      void main() {
+        vUv = uv;
+        vec3 p = position;
+        float angle = atan(p.y, p.x);
+        float undulation = sin(angle * 3.0 + p.z * 0.012) * 16.0 + cos(angle * 5.0 - p.z * 0.018) * 8.0;
+        p.xy += normalize(p.xy) * undulation;
+        vec4 worldPos = modelMatrix * vec4(p, 1.0);
+        vWorldPos = worldPos.xyz;
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `;
+
+    const caveFrag = `
+      uniform vec3 uBg;
+      uniform vec3 uCamPos;
+      uniform float uTime;
+      uniform float uCaveStrength;
+      
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      varying vec2 vUv;
+      
+      float hash(vec3 p) {
+        p = fract(p * 0.3183099 + 0.1);
+        p *= 17.0;
+        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+      }
+      
+      float noise(vec3 x) {
+        vec3 i = floor(x);
+        vec3 f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
+              mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+          mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+              mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+          f.z
+        );
+      }
+      
+      float fbm(vec3 p) {
+        float v = 0.0;
+        float a = 0.5;
+        mat3 rot = mat3(
+          0.80, 0.60, 0.00,
+         -0.60, 0.80, 0.00,
+          0.00, 0.00, 1.00
+        );
+        for (int i = 0; i < 3; i++) {
+          v += a * noise(p);
+          p = rot * p * 2.04;
+          a *= 0.5;
+        }
+        return v;
+      }
+      
+      void main() {
+        vec3 p = vWorldPos * 0.032;
+        float n = fbm(p);
+        float strata = sin(vWorldPos.y * 0.075 + n * 3.5) * 0.5 + 0.5;
+        float rock = n * 0.65 + strata * 0.35;
+        
+        vec3 darkBasalt = vec3(0.014, 0.015, 0.018);
+        vec3 slateRock = vec3(0.046, 0.048, 0.054);
+        vec3 mineralWarm = vec3(0.056, 0.050, 0.044);
+        vec3 rockColor = mix(darkBasalt, slateRock, rock);
+        rockColor = mix(rockColor, mineralWarm, strata * 0.25);
+        
+        float distToCam = distance(vWorldPos, uCamPos);
+        float nearFade = smoothstep(60.0, 190.0, distToCam);
+        float farFade = 1.0 - smoothstep(1100.0, 2700.0, distToCam);
+        float distMask = nearFade * farFade;
+        
+        vec3 viewDir = normalize(vWorldPos - uCamPos);
+        float angleFromCenter = length(viewDir.xy);
+        float edgeMask = smoothstep(0.24, 0.46, angleFromCenter);
+        
+        float caveAlpha = distMask * edgeMask * uCaveStrength;
+        vec3 col = mix(uBg, rockColor, caveAlpha * 0.32);
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    const caveMat = new THREE.ShaderMaterial({
+      vertexShader: caveVert,
+      fragmentShader: caveFrag,
+      uniforms: {
+        uBg: this.uniforms.uBg,
+        uCamPos: { value: new THREE.Vector3() },
+        uTime: { value: 0 },
+        uCaveStrength: { value: 0.3 }
+      },
+      side: THREE.BackSide,
+      depthWrite: false,
+      depthTest: true
+    });
+
+    this.caveMesh = new THREE.Mesh(caveGeo, caveMat);
+    this.caveMesh.renderOrder = -2;
+    this.caveMesh.frustumCulled = false;
+    this.scene.add(this.caveMesh);
+
+    const dustCount = 160;
+    const dustGeo = new THREE.BufferGeometry();
+    this.caveDustPositions = new Float32Array(dustCount * 3);
+    const dustSizes = new Float32Array(dustCount);
+    const dustAlphas = new Float32Array(dustCount);
+
+    for (let i = 0; i < dustCount; i++) {
+      const i3 = i * 3;
+      this.caveDustPositions[i3] = (Math.random() - 0.5) * 320;
+      this.caveDustPositions[i3 + 1] = (Math.random() - 0.5) * 220;
+      this.caveDustPositions[i3 + 2] = -Math.random() * 2200;
+      dustSizes[i] = 1.6 + Math.random() * 2.2;
+      dustAlphas[i] = 0.3 + Math.random() * 0.7;
+    }
+
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(this.caveDustPositions, 3));
+    dustGeo.setAttribute('aSize', new THREE.BufferAttribute(dustSizes, 1));
+    dustGeo.setAttribute('aAlpha', new THREE.BufferAttribute(dustAlphas, 1));
+
+    const dustVert = `
+      attribute float aSize;
+      attribute float aAlpha;
+      varying float vAlpha;
+      
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        float d = max(1.0, -mv.z);
+        vAlpha = aAlpha * smoothstep(30.0, 150.0, d) * (1.0 - smoothstep(1200.0, 2400.0, d));
+        gl_PointSize = clamp((aSize * 420.0) / d, 1.2, 5.0);
+        gl_Position = projectionMatrix * mv;
+      }
+    `;
+
+    const dustFrag = `
+      varying float vAlpha;
+      uniform float uCaveStrength;
+      
+      void main() {
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        float dist = length(coord);
+        if (dist > 0.5) discard;
+        float soft = smoothstep(0.5, 0.02, dist);
+        float alpha = soft * vAlpha * uCaveStrength * 0.22;
+        gl_FragColor = vec4(vec3(0.86, 0.88, 0.92), alpha);
+      }
+    `;
+
+    const dustMat = new THREE.ShaderMaterial({
+      vertexShader: dustVert,
+      fragmentShader: dustFrag,
+      uniforms: {
+        uCaveStrength: { value: 0.3 }
+      },
+      transparent: true,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.caveDust = new THREE.Points(dustGeo, dustMat);
+    this.caveDust.renderOrder = -1;
+    this.caveDust.frustumCulled = false;
+    this.scene.add(this.caveDust);
+  }
+
+  private updateCave(time: number) {
+    if (!this.caveMesh || !this.caveDust || !this.caveDustPositions) return;
+
+    const caveUniforms = (this.caveMesh.material as THREE.ShaderMaterial).uniforms;
+    caveUniforms.uCamPos.value.copy(this.camera.position);
+    caveUniforms.uTime.value = time * 0.001;
+    const caveEase = Math.min(1, this.dist / 70);
+    caveUniforms.uCaveStrength.value = 0.35 + 0.65 * caveEase;
+
+    const dustUniforms = (this.caveDust.material as THREE.ShaderMaterial).uniforms;
+    dustUniforms.uCaveStrength.value = 0.3 + 0.7 * caveEase;
+
+    this.caveMesh.position.set(0, 0, -this.dist - 1600);
+
+    const pos = this.caveDustPositions;
+    const t = time * 0.001;
+    const camZ = -this.dist;
+    const geo = this.caveDust.geometry as THREE.BufferGeometry;
+    const posAttr = geo.attributes.position as THREE.BufferAttribute;
+
+    for (let i = 0; i < pos.length; i += 3) {
+      const id = i / 3;
+      pos[i] += Math.sin(t * 0.45 + id * 1.7) * 0.035;
+      pos[i + 1] += Math.cos(t * 0.35 + id * 2.1) * 0.025;
+      
+      if (pos[i + 2] > camZ + 40) {
+        pos[i + 2] = camZ - 1800 - (id % 30) * 12;
+        pos[i] = (Math.sin(id * 9.2) * 0.5) * 320;
+        pos[i + 1] = (Math.cos(id * 5.7) * 0.5) * 220;
+      } else if (pos[i + 2] < camZ - 2400) {
+        pos[i + 2] = camZ - 40 - (id % 20) * 12;
+      }
+    }
+    posAttr.needsUpdate = true;
   }
 
   private setImage(i: number, itemIdx: number) {
@@ -1230,6 +1449,7 @@ export class VaultEngine {
     }
     this.flush();
     this.updateHover();
+    this.updateCave(time);
     this.renderer.render(this.scene, this.camera);
     this.rafId = requestAnimationFrame(this.renderLoop);
   }
@@ -1252,6 +1472,18 @@ export class VaultEngine {
     window.removeEventListener('pointerdown', this.handlePointerDown);
     window.removeEventListener('pointerup', this.handlePointerUp);
     window.removeEventListener('keydown', this.handleKeyDown);
+    if (this.caveMesh) {
+      this.scene.remove(this.caveMesh);
+      this.caveMesh.geometry.dispose();
+      (this.caveMesh.material as THREE.Material).dispose();
+      this.caveMesh = null;
+    }
+    if (this.caveDust) {
+      this.scene.remove(this.caveDust);
+      this.caveDust.geometry.dispose();
+      (this.caveDust.material as THREE.Material).dispose();
+      this.caveDust = null;
+    }
     this.renderer.dispose();
   }
 }
