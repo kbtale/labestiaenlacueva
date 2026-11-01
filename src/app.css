@@ -1,10 +1,10 @@
 @import '@unocss/reset/tailwind-compat.css';
 
-@import url('https://fonts.googleapis.com/css2?family=Forum&family=La+Belle+Aurore&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Forum&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=Lovers+Quarrel&display=swap');
 
 :root {
   color-scheme: dark;
-  --font-display: 'La Belle Aurore', cursive;
+  --font-display: 'Lovers Quarrel', cursive;
   --font-ui: 'Libre Franklin', sans-serif;
   --font-body: 'Forum', serif;
 }

@@ -118,8 +118,7 @@
 
 <VaultDrawer
   open={activeModal === 'sections'}
-  title="Mis Secciones / Archivo Directo"
-  subtitle="Selecciona una colección para explorar"
+  title=""
   maxWidth="max-w-2xl"
   onClose={() => activeModal = null}
 >
@@ -214,27 +213,76 @@
 
 <VaultDrawer
   open={activeModal === 'contact'}
-  title="Contacto y Colaboraciones"
+  title="Contacto"
   onClose={() => activeModal = null}
 >
-  <div class="space-y-4 font-ui text-xs text-neutral-300">
-    <p class="font-body text-sm leading-relaxed text-neutral-300">
-      Para propuestas editoriales, proyectos audiovisuales, curaduría o charlas críticas, puedes comunicarte por los siguientes canales directos:
-    </p>
-    <div class="p-4 rounded-xl bg-white/5 flex items-center justify-between border border-white/5">
+  <form
+    onsubmit={(e) => {
+      e.preventDefault();
+      const form = e.currentTarget as HTMLFormElement;
+      const name = (form.elements.namedItem('name') as HTMLInputElement)?.value || '';
+      const subject = (form.elements.namedItem('subject') as HTMLInputElement)?.value || 'Contacto desde la web';
+      const msg = (form.elements.namedItem('message') as HTMLTextAreaElement)?.value || '';
+      const body = encodeURIComponent(`De: ${name}\n\n${msg}`);
+      window.location.href = `mailto:labestiaelc@gmail.com?subject=${encodeURIComponent(subject)}&body=${body}`;
+    }}
+    class="space-y-4 font-ui text-xs"
+  >
+    <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5">
       <div>
-        <div class="text-[10px] uppercase tracking-wider text-neutral-400 font-ui">Correo Electrónico</div>
-        <div class="text-white text-sm font-semibold select-all font-ui">labestiaelc@gmail.com</div>
+        <div class="text-[10px] uppercase tracking-wider text-neutral-400 font-ui font-semibold">Destinatario</div>
+        <div class="text-white text-xs select-all font-medium mt-0.5">labestiaelc@gmail.com</div>
       </div>
-      <a
-        href="mailto:labestiaelc@gmail.com"
-        class="px-3.5 py-1.5 rounded-full bg-white text-black font-ui font-semibold text-[11px] hover:bg-white/90 transition-colors border-0"
+      <button
+        type="button"
+        onclick={() => navigator.clipboard?.writeText('labestiaelc@gmail.com')}
+        class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-ui text-[11px] transition-colors border-0 cursor-pointer"
       >
-        Escribir
-      </a>
+        Copiar correo
+      </button>
     </div>
-    <p class="text-[11px] text-neutral-400 font-ui">
-      También puedes contactar directamente a través del servidor oficial de Discord.
-    </p>
-  </div>
+
+    <div class="space-y-1.5">
+      <label for="contact-name" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Nombre o alias</label>
+      <input
+        id="contact-name"
+        name="name"
+        type="text"
+        required
+        placeholder="Tu nombre"
+        class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
+      />
+    </div>
+
+    <div class="space-y-1.5">
+      <label for="contact-subject" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Asunto</label>
+      <input
+        id="contact-subject"
+        name="subject"
+        type="text"
+        required
+        placeholder="Propuesta, colaboración, comentario..."
+        class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
+      />
+    </div>
+
+    <div class="space-y-1.5">
+      <label for="contact-message" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Mensaje</label>
+      <textarea
+        id="contact-message"
+        name="message"
+        rows="4"
+        required
+        placeholder="Escribe tu mensaje aquí..."
+        class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors resize-none"
+      ></textarea>
+    </div>
+
+    <button
+      type="submit"
+      class="w-full py-3 rounded-full bg-white text-black font-ui font-semibold text-xs hover:bg-white/90 active:scale-[0.99] transition-all border-0 cursor-pointer"
+    >
+      Enviar mensaje
+    </button>
+  </form>
 </VaultDrawer>

@@ -36,7 +36,7 @@
     </div>
 
     <div class="w-full text-center overflow-visible pt-4 pb-2 select-none pointer-events-none">
-      <h1 class="font-display text-[clamp(3.8rem,10.5vw,11.5rem)] text-white/95 leading-[1.1] tracking-tight whitespace-nowrap drop-shadow-2xl">
+      <h1 class="font-display text-[clamp(4.5rem,13vw,13.5rem)] text-white/95 leading-[0.95] tracking-normal whitespace-nowrap">
         La Bestia en la Cueva
       </h1>
     </div>

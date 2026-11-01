@@ -1,7 +1,7 @@
 <script lang="ts">
   interface Props {
     open: boolean;
-    title: string;
+    title?: string;
     subtitle?: string;
     maxWidth?: string;
     onClose: () => void;
@@ -10,8 +10,8 @@
 
   let {
     open,
-    title,
-    subtitle,
+    title = '',
+    subtitle = '',
     maxWidth = 'max-w-lg',
     onClose,
     children
@@ -65,23 +65,27 @@
       aria-modal="true"
       class="vault-drawer-card relative z-10 w-full {maxWidth} bg-[#0c0d12]/98 rounded-2xl p-6 sm:p-8 border border-white/10 backdrop-blur-2xl flex flex-col gap-6 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 translate-y-3 pointer-events-none'}"
     >
-      <div class="flex items-center justify-between pb-3 border-b border-white/5">
-        <div class="flex flex-col">
-          <span class="font-ui text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-            {title}
-          </span>
-          {#if subtitle}
-            <span class="font-ui text-sm text-neutral-300 font-medium mt-0.5">
-              {subtitle}
-            </span>
-          {/if}
-        </div>
+      <div class="flex items-center justify-between pb-3 {title || subtitle ? 'border-b border-white/5' : ''}">
+        {#if title || subtitle}
+          <div class="flex flex-col">
+            {#if title}
+              <span class="font-ui text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+                {title}
+              </span>
+            {/if}
+            {#if subtitle}
+              <span class="font-ui text-sm text-neutral-300 font-medium mt-0.5">
+                {subtitle}
+              </span>
+            {/if}
+          </div>
+        {/if}
 
         <button
           type="button"
           onclick={handleClose}
           aria-label="Cerrar"
-          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white text-white/70 hover:text-black flex items-center justify-center border-0 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer shrink-0"
+          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white text-white/70 hover:text-black flex items-center justify-center border-0 transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer shrink-0 ml-auto"
         >
           <svg class="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>

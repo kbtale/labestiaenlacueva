@@ -22,12 +22,12 @@
     const frame = (now: number) => {
       const dt = Math.min(0.25, (now - last) / 1000);
       last = now;
-      const pace = Math.min(1, (now - t0) / 900);
+      const pace = Math.min(1, (now - t0) / 2200);
       const goal = Math.min(Math.max(progress, 0.05), pace);
 
-      shown += (goal - shown) * (1 - Math.exp(-dt * 9));
+      shown += (goal - shown) * (1 - Math.exp(-dt * 6.0));
 
-      if ((progress >= 0.99 || pace >= 1) && (shown > 0.98 || (now - t0) > 1350)) {
+      if (pace >= 1 && (shown > 0.985 || (now - t0) > 2600)) {
         shown = 1;
         isFading = true;
         onStartIntro?.();
@@ -53,19 +53,15 @@
   <div
     class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0b] transition-all duration-700 ease-out {isFading ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}"
   >
-    <div class="relative w-28 h-36 sm:w-32 sm:h-40 flex items-center justify-center">
-      <VaultCharacter
-        progress={1}
-        class="absolute inset-0 w-full h-full text-white/10"
-      />
+    <div class="relative w-32 h-40 sm:w-36 sm:h-44 flex items-center justify-center">
       <VaultCharacter
         progress={shown}
-        class="w-full h-full text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.45)] transition-[filter] duration-300"
+        class="w-full h-full text-white transition-all duration-300"
       />
     </div>
 
     <div class="mt-6 flex flex-col items-center gap-1.5">
-      <span class="font-display text-2xl sm:text-3xl text-white/90 tracking-wide">
+      <span class="font-display text-4xl sm:text-5xl text-white/90 tracking-normal">
         La Bestia en la Cueva
       </span>
       <span class="font-ui text-[11px] tracking-widest uppercase text-white/40">
