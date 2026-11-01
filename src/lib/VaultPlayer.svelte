@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ArchiveItem } from './VaultEngine';
-  import VaultCapsuleButton from './VaultCapsuleButton.svelte';
+  import VaultKineticButton from './VaultKineticButton.svelte';
 
   interface Props {
     selectedItem: ArchiveItem | null;
@@ -94,19 +94,17 @@
         </div>
       </div>
 
-      <div class="sticky bottom-0 z-20 p-6 sm:p-7 bg-[#0a0a0d]/95 backdrop-blur-xl flex flex-wrap items-center gap-3 border-0">
-        <VaultCapsuleButton
+      <div class="sticky bottom-0 z-20 p-6 sm:p-7 bg-[#0a0a0d]/95 backdrop-blur-xl flex flex-wrap items-center gap-6 border-0">
+        <VaultKineticButton
           label="Abrir en YouTube"
           icon="external"
-          variant="primary"
           href={`https://www.youtube.com/watch?v=${selectedItem.id}`}
           target="_blank"
         />
 
-        <VaultCapsuleButton
+        <VaultKineticButton
           label="Copiar enlace"
           icon="copy"
-          variant="secondary"
           onclick={copyLink}
           isSuccess={copied}
           successLabel="¡Enlace copiado!"
