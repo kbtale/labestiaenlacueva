@@ -31,8 +31,10 @@
   let isDropdownMounted = $state(false);
   let isDropdownOpen = $state(false);
   let isCopiedEmail = $state(false);
+  let githubStars = $state<number>(2);
 
   const isAtRest = $derived(dist < 30);
+  const starsLabel = $derived(`★ ${githubStars}`);
 
   const sectionKeys = [
     'Vídeos que Pondría en un Museo',
@@ -52,6 +54,16 @@
       const res = await fetch('/data/archive.json');
       const data = await res.json();
       archiveItems = data.entries || [];
+    } catch {}
+
+    try {
+      const res = await fetch('https://api.github.com/repos/kbtale/labestiaenlacueva');
+      if (res.ok) {
+        const repoData = await res.json();
+        if (typeof repoData.stargazers_count === 'number') {
+          githubStars = repoData.stargazers_count;
+        }
+      }
     } catch {}
   });
 
@@ -145,9 +157,11 @@
 />
 
 <header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-3.5 sm:p-8 flex flex-col sm:flex-row items-center sm:justify-between min-h-[56px] sm:min-h-[80px]">
-  <div class="w-full sm:w-auto flex items-center justify-start pointer-events-auto">
+  <div
+    class="w-full sm:w-auto flex items-center justify-start transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-5 scale-[0.96] pointer-events-none'}"
+  >
     <VaultCapsuleButton
-      label="GitHub"
+      label={starsLabel}
       icon="github"
       href="https://github.com/kbtale/labestiaenlacueva"
       target="_blank"
