@@ -24,6 +24,13 @@ interface ArchiveDataset {
   seq: number[];
 }
 
+function flow(x: number, y: number, t: number): [number, number] {
+  return [
+    Math.sin(y * 0.045 + t * 0.35) + 0.6 * Math.sin((x + y) * 0.03 - t * 0.27),
+    Math.cos(x * 0.045 - t * 0.31) + 0.6 * Math.cos((x - y) * 0.03 + t * 0.23)
+  ];
+}
+
 function rng(a: number, b: number) {
   let t = (a * 374761393 + b * 668265263) >>> 0;
   return () => {
@@ -35,19 +42,19 @@ function rng(a: number, b: number) {
 }
 
 const RUNWAY = {
+  step: 38,
+  h: 7.8,
+  x: 10,
+  y: 6,
+  z0: 220,
   n: 52,
-  step: 52,
-  h: 7.6,
-  x: 12,
-  y: 7,
-  z0: 240,
-  rx: 28,
-  ry: 20
+  rx: 24,
+  ry: 18
 };
 
-const ATMO_COUNT = 1067;
-const STREAM_R = 155.0;
+const VORTEX_RADIUS = 150.0;
 const CYCLE_PERIOD = 1384.0;
+const PXB = 5.5e6;
 
 const SLICE_WORKER_CODE = `self.onmessage = async (e) => {
   const { id, url, strip } = e.data;
@@ -105,7 +112,7 @@ export class VaultEngine {
   private onSelectCallback: (item: ArchiveItem) => void;
   private onDistChangeCallback?: (dist: number, activeItem?: ArchiveItem | null) => void;
   private onProgressCallback?: (progress: number) => void;
-
+  
   private W = 0;
   private H = 0;
   private dpr = 1;
@@ -119,10 +126,9 @@ export class VaultEngine {
   private mouseNorm = { x: 0, y: 0 };
   private drift = { x: 0, y: 0 };
   private rewind: { from: number; t0: number; dur: number } | null = null;
-
+  
   private fr = { cx: 0, cy: 0, w: 0, h: 0, ready: false };
   private isDrawerOpen = false;
-  private pendingSelect: ArchiveItem | null = null;
 
   private hoveredIndex = -1;
   private activeFilter: string | null = null;
@@ -130,12 +136,16 @@ export class VaultEngine {
   private targetSoft = 0;
   private isDestroyed = false;
   private rafId = 0;
+  private grow = 0;
   private dirty = false;
-
-  private totalCapacity = RUNWAY.n + ATMO_COUNT;
+  
+  private N = 0;
+  private totalCapacity = 0;
   private runwayK: Int32Array = new Int32Array(RUNWAY.n);
-  private atmoEpoch: Int32Array = new Int32Array(ATMO_COUNT);
-  private tileItem: Int32Array = new Int32Array(RUNWAY.n + ATMO_COUNT);
+  private tileEpoch: Int32Array = new Int32Array(0);
+  private tileItem: Int32Array = new Int32Array(0);
+  private epochCache: Map<number, number> = new Map();
+  private floaters: number[] = [];
 
   private attrSlot!: THREE.InstancedBufferAttribute;
   private attrColor!: THREE.InstancedBufferAttribute;
@@ -163,7 +173,19 @@ export class VaultEngine {
     h0: number;
     hs: number;
     hideFly: boolean;
+    float?: [number, number, number, number, number];
+    from?: THREE.Vector3;
+    delay?: number;
+    dur?: number;
   }> = [];
+  private raycaster = new THREE.Raycaster();
+  private ndc = new THREE.Vector2();
+
+  private introStart = -1;
+  private introEnd = 0;
+  private introDone = false;
+  private vIntroPos = new THREE.Vector3();
+  private vIntroTg = new THREE.Vector3();
 
   private uniforms = {
     uShift: { value: 0 },
@@ -351,11 +373,12 @@ export class VaultEngine {
   private buildMesh() {
     if (!this.data) return;
     const D = this.data;
+    this.N = D.cells.length;
+    this.totalCapacity = this.N + RUNWAY.n;
 
-    this.totalCapacity = RUNWAY.n + ATMO_COUNT;
+    this.tileEpoch = new Int32Array(this.totalCapacity).fill(-1);
     this.tileItem = new Int32Array(this.totalCapacity).fill(-1);
     this.runwayK = new Int32Array(RUNWAY.n).fill(-1);
-    this.atmoEpoch = new Int32Array(ATMO_COUNT).fill(0);
 
     const geo = new THREE.PlaneGeometry(D.cell[0] / D.cell[1], 1);
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, -1000), 100000);
@@ -395,10 +418,10 @@ export class VaultEngine {
         float s = length(instanceMatrix[1].xyz);
         float d = -mv.z;
         vFade = smoothstep(s * 1.1, s * 2.6, d);
-        vFade *= aRunway > 0.5 ? smoothstep(0.12, 0.65, uFog) : smoothstep(0.08, 0.55, uFog);
+        vFade *= aRunway > 0.5 ? smoothstep(0.12, 0.65, uFog) : 1.0;
         vDepth = d;
         vLocal = uv;
-        vBias = uBlur * pow(smoothstep(45.0, 1150.0, d), 0.75) * 5.0 + uSoft * 0.6;
+        vBias = uBlur * pow(smoothstep(120.0, 1800.0, d), 1.2) * 2.2 + uSoft * 0.5;
         vec2 pad = 0.5 * exp2(vBias) / uTilePx + 0.002;
         vec2 inset = mix(pad, 1.0 - pad, uv);
         vUv = vec2((aSlot.x + inset.x) / uGrid.x, 1.0 - (aSlot.y + 1.0 - inset.y) / uGrid.y);
@@ -440,7 +463,7 @@ export class VaultEngine {
       }
       
       void main() {
-        float a = vFade;
+        float a = vFade * (1.0 - vFill * smoothstep(0.0, 0.6, uFog));
         if (a < 0.999 && ign(gl_FragCoord.xy) > a) discard;
         vec2 q = abs((vLocal - 0.5) * vec2(1.3333, 1.0)) - vec2(0.6667, 0.5) + 0.06;
         if (length(max(q, 0.0)) > 0.06) discard;
@@ -461,7 +484,7 @@ export class VaultEngine {
           float inner = smoothstep(0.1, 0.0, edge) * (0.14 + 0.07 * sin(uTime * 1.6 + vCase * 30.0));
           c += vec3(1.0, 0.98, 0.95) * (band + inner) * uFog * (1.0 - smoothstep(110.0, 190.0, vDepth));
         }
-        c = mix(c, uBg, smoothstep(520.0, 1400.0, vDepth) * uFog);
+        c = mix(c, uBg, smoothstep(850.0, 2400.0, vDepth) * uFog);
         c = mix(c, uBg, uSoft * 0.45);
         gl_FragColor = vec4(c, 1.0);
       }
@@ -504,62 +527,49 @@ export class VaultEngine {
     geo.setAttribute('aRunway', this.attrRunway);
 
     this.world = [];
+    this.floaters = [];
+
+    for (let i = 0; i < this.N; i++) {
+      const c = D.cells[i];
+      const w = {
+        pos: new THREE.Vector3(),
+        base: new THREE.Vector3(),
+        h: 0,
+        h0: 0,
+        hs: 1,
+        hideFly: false,
+        float: undefined as [number, number, number, number, number] | undefined
+      };
+
+      const isHalo = c[9] !== 1 && (c[8] ?? 1) < 0.6;
+      if (isHalo) {
+        const seed = (i * 137.5) % 1;
+        w.float = [0.04 + seed * 0.05, 0, seed, i * 0.35, 18 + seed * 25];
+        this.floaters.push(i);
+      }
+
+      this.world[i] = w;
+      this.attrColor.setXYZ(i, c[1] / 255, c[2] / 255, c[3] / 255);
+      this.attrRunway.setX(i, 0);
+      this.setEpoch(i, 0);
+    }
 
     for (let s = 0; s < RUNWAY.n; s++) {
-      this.world[s] = {
+      const i = this.N + s;
+      this.world[i] = {
         pos: new THREE.Vector3(0, 0, 1e7),
         base: new THREE.Vector3(0, 0, 1e7),
-        h: RUNWAY.h,
+        h: 0,
         h0: RUNWAY.h,
         hs: 1,
         hideFly: false
       };
-      this.attrDim.setX(s, 1);
-      this.attrFill.setX(s, 0);
-      this.attrFilterDim.setX(s, 1);
-      this.attrRunway.setX(s, 1);
-      this.vS.set(0, 0, 1);
-      this.mesh.setMatrixAt(s, this.m4.compose(this.world[s].pos, this.qI, this.vS));
-    }
-
-    const numEntries = D.entries.length;
-    for (let s = 0; s < ATMO_COUNT; s++) {
-      const i = RUNWAY.n + s;
-      const d = (((s * 1.6180339887) % 1) * CYCLE_PERIOD);
-      const ang = ((s * 2.7182818) % 1) * Math.PI * 2;
-      const radFrac = Math.pow(((s * 0.7071067) % 1), 0.75);
-      const rad = RUNWAY.rx + (STREAM_R - RUNWAY.rx) * radFrac;
-      const h = 1.3 + Math.pow(((s * 3.1415926) % 1), 2.2) * 6.8;
-
-      const w = {
-        pos: new THREE.Vector3(
-          Math.cos(ang) * rad,
-          Math.sin(ang) * rad * 0.82,
-          -d
-        ),
-        base: new THREE.Vector3(
-          Math.cos(ang) * rad,
-          Math.sin(ang) * rad * 0.82,
-          -d
-        ),
-        h: h,
-        h0: h,
-        hs: 1,
-        hideFly: false
-      };
-
-      this.world[i] = w;
-      this.vS.set(h, h, 1);
-      this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
-
-      const itemIdx = (s * 7 + 3) % numEntries;
-      this.setImage(i, itemIdx);
-
-      this.attrDim.setX(i, 0.95);
+      this.attrDim.setX(i, 1);
       this.attrFill.setX(i, 0);
       this.attrFilterDim.setX(i, 1);
-      this.attrRunway.setX(i, 0);
-      this.attrCase.setX(i, (s % 17 === 0) ? 0.35 : 0.0);
+      this.attrRunway.setX(i, 1);
+      this.vS.set(0, 0, 1);
+      this.mesh.setMatrixAt(i, this.m4.compose(this.world[i].pos, this.qI, this.vS));
     }
 
     this.updateRunway();
@@ -579,7 +589,90 @@ export class VaultEngine {
     const row = Math.floor(item.slot / 16);
     this.attrSlot.setXY(i, col, row);
     this.attrMean.setXYZ(i, item.mean[0] / 255, item.mean[1] / 255, item.mean[2] / 255);
-    this.attrColor.setXYZ(i, item.mean[0] / 255, item.mean[1] / 255, item.mean[2] / 255);
+    this.dirty = true;
+  }
+
+  private place(i: number, epoch: number) {
+    if (!this.data) return;
+    const D = this.data;
+    const c = D.cells[i];
+    const d = c[4];
+    const w = this.world[i];
+
+    if (epoch === 0) {
+      const col = c[5];
+      const row = c[6];
+      const k = d / D.D0;
+      w.h0 = D.cell[1] * k * 0.94;
+      w.hs = c[7] ?? 1;
+      w.h = w.h0 * (w.hs + (1 - w.hs) * this.grow);
+      if (c[9] === 1) {
+        w.h0 = 0;
+        w.h = 0;
+      }
+      w.pos.set(
+        (col + 0.5 - D.cols / 2) * D.cell[0] * k,
+        (D.rows / 2 - row - 0.5) * D.cell[1] * k,
+        -d
+      );
+      w.base.copy(w.pos);
+      w.hideFly = !!c[9] || (Math.abs(w.pos.x) < RUNWAY.rx && Math.abs(w.pos.y) < RUNWAY.ry);
+      this.attrDim.setX(i, c[9] === 1 ? 0 : (c[8] ?? 1));
+      this.attrFill.setX(i, w.hideFly ? 1 : 0);
+      this.attrCase.setX(i, 0);
+    } else {
+      const r = rng(i + 1, epoch);
+      const k = (d + epoch * CYCLE_PERIOD) / D.D0;
+      const col = c[5];
+      const row = c[6];
+      const jx = (r() - 0.5) * 6.0 * k;
+      const jy = (r() - 0.5) * 6.0 * k;
+      w.pos.set(
+        (col + 0.5 - D.cols / 2) * D.cell[0] * k + jx,
+        (D.rows / 2 - row - 0.5) * D.cell[1] * k + jy,
+        -(d + epoch * CYCLE_PERIOD)
+      );
+      w.base.copy(w.pos);
+      w.h0 = D.cell[1] * k * 0.94;
+      w.hs = c[7] ?? (0.65 + r() * 0.7);
+      w.h = w.h0 * w.hs;
+      const inLane = Math.abs(w.pos.x) < RUNWAY.rx * 0.65 && Math.abs(w.pos.y) < RUNWAY.ry * 0.65;
+      w.hideFly = inLane;
+      this.attrDim.setX(i, 1.0);
+      this.attrFill.setX(i, inLane ? 1 : 0);
+      this.attrCase.setX(i, 0);
+    }
+
+    this.vS.set(w.h, w.h, 1);
+    this.mesh!.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
+  }
+
+  private setEpoch(i: number, epoch: number) {
+    if (this.tileEpoch[i] === epoch) return;
+    this.tileEpoch[i] = epoch;
+    this.place(i, epoch);
+
+    let itemIdx: number;
+    if (epoch === 0) {
+      itemIdx = this.data!.cells[i][0] % this.data!.entries.length;
+    } else if (!this.world[i].h) {
+      itemIdx = -1;
+    } else {
+      const key = epoch * this.N + i;
+      const cached = this.epochCache.get(key);
+      if (cached !== undefined) {
+        itemIdx = cached;
+      } else {
+        const M = this.data!.seq.length;
+        const r = rng(i + 3, epoch);
+        const ahead = this.runwayIndexAt(-this.world[i].pos.z);
+        const k = (ahead + 10 + Math.floor(r() * 40)) % M;
+        itemIdx = this.data!.seq[k] % this.data!.entries.length;
+        this.epochCache.set(key, itemIdx);
+      }
+    }
+
+    this.setImage(i, itemIdx);
     this.dirty = true;
   }
 
@@ -595,7 +688,7 @@ export class VaultEngine {
 
     for (let k = first; k < first + RUNWAY.n; k++) {
       const s = k % RUNWAY.n;
-      const i = s;
+      const i = this.N + s;
       if (this.runwayK[s] === k) continue;
       this.runwayK[s] = k;
 
@@ -622,30 +715,13 @@ export class VaultEngine {
   }
 
   private cycleEpochs() {
-    if (!this.data || !this.mesh) return;
-
-    for (let s = 0; s < ATMO_COUNT; s++) {
-      const i = RUNWAY.n + s;
-      const w = this.world[i];
-      const d = (((s * 1.6180339887) % 1) * CYCLE_PERIOD);
-
-      if (this.dist > -w.pos.z + 15) {
-        const epoch = Math.ceil((this.dist - d) / CYCLE_PERIOD);
-        if (epoch !== this.atmoEpoch[s]) {
-          this.atmoEpoch[s] = epoch;
-          const r = rng(s + 1, epoch);
-          const ang = r() * Math.PI * 2;
-          const rad = RUNWAY.rx + (STREAM_R - RUNWAY.rx) * Math.pow(r(), 0.75);
-          w.h = 1.3 + Math.pow(r(), 2.2) * 6.8;
-          w.pos.set(
-            Math.cos(ang) * rad,
-            Math.sin(ang) * rad * 0.82,
-            -(d + epoch * CYCLE_PERIOD)
-          );
-          this.vS.set(w.h, w.h, 1);
-          this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
-          this.dirty = true;
-        }
+    if (!this.data) return;
+    const D = this.data;
+    for (let i = 0; i < this.N; i++) {
+      const d = D.cells[i][4];
+      const epoch = this.dist > d ? Math.ceil((this.dist - d) / CYCLE_PERIOD) : 0;
+      if (epoch !== this.tileEpoch[i]) {
+        this.setEpoch(i, epoch);
       }
     }
   }
@@ -654,7 +730,6 @@ export class VaultEngine {
     if (!this.dirty || !this.mesh) return;
     this.mesh.instanceMatrix.needsUpdate = true;
     this.attrSlot.needsUpdate = true;
-    this.attrColor.needsUpdate = true;
     this.attrMean.needsUpdate = true;
     this.attrDim.needsUpdate = true;
     this.attrFill.needsUpdate = true;
@@ -704,21 +779,27 @@ export class VaultEngine {
     const fitH = 2 * Math.atan(100 / 1.03 / 2 / 160.0 * (this.H / this.fr.h)) * 180 / Math.PI;
     const fitW = 2 * Math.atan((100 * 0.93418) / 0.96 / 2 / 160.0 / this.camera.aspect * (this.W / this.fr.w)) * 180 / Math.PI;
     this.camera.fov = wide || open ? Math.max(fitH, fitW) : fitH;
+
     this.camera.setViewOffset(this.W, this.H, this.W / 2 - this.fr.cx, this.H / 2 - this.fr.cy, this.W, this.H);
     this.camera.updateProjectionMatrix();
   }
 
   private handleResize() {
+    if (!this.canvas) return;
     const cr = this.canvas.getBoundingClientRect();
     this.W = Math.round(cr.width) || window.innerWidth;
     this.H = Math.round(cr.height) || window.innerHeight;
+
+    const gl = this.renderer.getContext();
+    const vp = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+    const mx = Math.min(vp[0], vp[1], gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+    this.renderer.setPixelRatio(Math.max(0.5, Math.min(this.dpr, mx / this.W, mx / this.H, Math.sqrt(PXB / (this.W * this.H)))));
     this.renderer.setSize(this.W, this.H, false);
     this.camera.aspect = this.W / this.H;
-    this.stage(1);
+    this.stage(1.0);
   }
 
   private pushDelta(dy: number) {
-    this.pendingSelect = null;
     if (this.rewind) {
       this.rewind = null;
       this.targetDist = this.dist;
@@ -727,17 +808,12 @@ export class VaultEngine {
   }
 
   private handleWheel(e: WheelEvent) {
-    const target = e.target as HTMLElement | null;
-    if (this.isDrawerOpen || target?.closest('.vault-drawer-overlay, .vault-drawer-card, .vault-drawer-body, aside, dialog')) {
-      return;
-    }
     e.preventDefault();
     const mult = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? this.H : 1;
     this.pushDelta(e.deltaY * mult * 0.22);
   }
 
   private handlePointerDown(e: PointerEvent) {
-    if (e.target !== this.canvas) return;
     this.isInteracting = true;
     this.pointerDownPos = { x: e.clientX, y: e.clientY, time: performance.now() };
     this.pointerCurrentPos = { x: e.clientX, y: e.clientY, inCanvas: e.target === this.canvas };
@@ -772,7 +848,7 @@ export class VaultEngine {
       const pickedIdx = this.pickInstance(e.clientX, e.clientY);
       const targetIdx = pickedIdx >= 0 ? pickedIdx : this.hoveredIndex;
 
-      if (targetIdx >= 0 && targetIdx < RUNWAY.n && this.data) {
+      if (targetIdx >= this.N && targetIdx < this.N + RUNWAY.n && this.data) {
         const w = this.world[targetIdx];
         const itemIdx = this.tileItem[targetIdx];
         if (itemIdx >= 0) {
@@ -783,10 +859,8 @@ export class VaultEngine {
             const distDiff = Math.abs(this.dist - focusDist);
 
             if (distDiff > 25) {
-              this.pendingSelect = item;
               this.flyTo(focusDist);
             } else {
-              this.pendingSelect = null;
               this.onSelectCallback(item);
             }
           }
@@ -825,7 +899,7 @@ export class VaultEngine {
 
   private pickInstance(clientX: number, clientY: number): number {
     if (this.dist < 30 || !this.data || !this.mesh || this.world.length === 0 || this.W === 0 || this.H === 0) return -1;
-
+    
     const focal = this.H / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     const cx = this.W / 2;
     const cy = this.H / 2;
@@ -835,8 +909,10 @@ export class VaultEngine {
     let bestIdx = -1;
     let closestZ = -9999999;
 
-    for (let s = 0; s < RUNWAY.n; s++) {
-      const i = s;
+    const start = this.N;
+    const end = Math.min(this.totalCapacity, this.N + RUNWAY.n);
+
+    for (let i = start; i < end; i++) {
       const w = this.world[i];
       if (w.h <= 0.1) continue;
 
@@ -884,7 +960,7 @@ export class VaultEngine {
     if (idx !== this.hoveredIndex) {
       this.hoveredIndex = idx;
       this.uniforms.uHover.value = idx;
-      if (idx >= 0 && idx < RUNWAY.n && this.data) {
+      if (idx >= this.N && idx < this.N + RUNWAY.n && this.data) {
         this.canvas.style.cursor = 'pointer';
         const itemIdx = this.tileItem[idx];
         const item = itemIdx >= 0 ? this.data.entries[itemIdx] : null;
@@ -893,10 +969,6 @@ export class VaultEngine {
         this.canvas.style.cursor = 'default';
         this.onHoverCallback(null);
       }
-    } else if (idx !== -1 && idx >= 0 && idx < RUNWAY.n && this.data) {
-      const itemIdx = this.tileItem[idx];
-      const item = itemIdx >= 0 ? this.data.entries[itemIdx] : null;
-      this.onHoverCallback(item, { x: this.pointerCurrentPos.x, y: this.pointerCurrentPos.y });
     }
   }
 
@@ -927,7 +999,107 @@ export class VaultEngine {
     this.targetDist = Math.max(0, target);
   }
 
-  public startIntro() {}
+  public startIntro() {
+    if (this.introStart < 0 && !this.introDone) {
+      this.introStart = performance.now();
+      this.introEnd = 0;
+    }
+  }
+
+  private updateIntro(now: number) {
+    if (this.introStart < 0 || !this.data || !this.mesh) return;
+    const t = now - this.introStart;
+    if (this.introEnd > 0 && t > this.introEnd) {
+      this.introStart = -1;
+      this.introDone = true;
+      this.updateHaloFloaters(now);
+      return;
+    }
+
+    const D = this.data;
+    const v = this.vIntroPos;
+    const tg = this.vIntroTg;
+    let last = 0;
+
+    for (let i = 0; i < this.N; i++) {
+      if (this.tileEpoch[i] !== 0) continue;
+      const w = this.world[i];
+      const c = D.cells[i];
+      if (c[9] === 1 || w.h0 <= 0) continue;
+
+      if (!w.from) {
+        const r = rng(i + 101, 7);
+        const k = c[4] / D.D0;
+        const a = r() * Math.PI * 2;
+        const rad = (60 + r() * 120) * k;
+        w.from = new THREE.Vector3(Math.cos(a) * rad, Math.sin(a) * rad, -(c[4] * (1.4 + r() * 1.2)));
+        w.delay = r() * 1500 + Math.hypot(c[5] - D.cols / 2, c[6] - D.rows * 0.4) * 9;
+        w.dur = 1300 + r() * 900;
+      }
+
+      last = Math.max(last, w.delay + w.dur);
+      let p = Math.min(1, Math.max(0, (t - w.delay) / w.dur));
+      p = 1 - Math.pow(1 - p, 3);
+
+      const dim = c[8] ?? 1;
+      tg.copy(w.pos);
+
+      v.lerpVectors(w.from, tg, p);
+      this.attrDim.setX(i, dim * Math.min(1, p * 1.6));
+      const s = w.h * (0.35 + 0.65 * p);
+      this.vS.set(s, s, 1);
+      this.mesh.setMatrixAt(i, this.m4.compose(v, this.qI, this.vS));
+    }
+
+    this.introEnd = last + 50;
+    this.mesh.instanceMatrix.needsUpdate = true;
+    this.attrDim.needsUpdate = true;
+  }
+
+  private updateHaloFloaters(now: number) {
+    if (!this.mesh || this.dist > 300) return;
+    const t = now * 0.001;
+
+    for (let j = 0; j < this.floaters.length; j += 2) {
+      const i = this.floaters[j];
+      const w = this.world[i];
+      if (!w.float) continue;
+
+      const f = w.float;
+      const u = (t * f[0] + f[2]) % 1;
+      const out = Math.pow(1 - u, 1.6);
+      const sw = flow(w.base.x * 0.01, w.base.y * 0.01, t + f[3]);
+      const r0 = f[4];
+
+      w.pos.x = w.base.x + sw[0] * out * r0;
+      w.pos.y = w.base.y + sw[1] * out * r0;
+
+      const dim = Math.min(1, u / 0.3) * (1 - Math.max(0, (u - 0.8) / 0.2) * 0.85);
+      this.attrDim.setX(i, dim);
+
+      this.vS.set(w.h, w.h, 1);
+      this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
+    }
+
+    this.mesh.instanceMatrix.needsUpdate = true;
+    this.attrDim.needsUpdate = true;
+  }
+
+  private setGrow(g: number) {
+    if (Math.abs(g - this.grow) < 0.002 || !this.mesh || !this.data) return;
+    this.grow = g;
+    const D = this.data;
+    for (let i = 0; i < this.N; i++) {
+      if (this.tileEpoch[i] !== 0 || D.cells[i][9]) continue;
+      const w = this.world[i];
+      w.h = w.h0 * (w.hs + (1.0 - w.hs) * this.grow);
+      if (!w.float) {
+        this.vS.set(w.h, w.h, 1);
+        this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
+      }
+    }
+    this.dirty = true;
+  }
 
   private renderLoop(time: number) {
     if (this.isDestroyed) return;
@@ -956,11 +1128,6 @@ export class VaultEngine {
       this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 2.8));
       if (Math.abs(this.targetDist - this.dist) < 0.01) {
         this.dist = this.targetDist;
-      }
-      if (this.pendingSelect && Math.abs(this.targetDist - this.dist) < 2.0) {
-        const itemToSelect = this.pendingSelect;
-        this.pendingSelect = null;
-        this.onSelectCallback(itemToSelect);
       }
     }
 
@@ -991,8 +1158,14 @@ export class VaultEngine {
     this.uniforms.uSoft.value = this.softFactor;
     this.uniforms.uTime.value = time * 0.001;
 
+    this.setGrow(ease);
     this.cycleEpochs();
     this.updateRunway();
+    if (this.introStart >= 0) {
+      this.updateIntro(time);
+    } else {
+      this.updateHaloFloaters(time);
+    }
     this.flush();
     this.updateHover();
     this.renderer.render(this.scene, this.camera);
