@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ArchiveItem } from './VaultEngine';
   import VaultKineticButton from './VaultKineticButton.svelte';
+  import { getLang, translations } from './i18n.svelte';
 
   interface Props {
     selectedItem: ArchiveItem | null;
@@ -8,6 +9,9 @@
   }
 
   let { selectedItem, onClose }: Props = $props();
+
+  let lang = $derived(getLang());
+  let t = $derived(translations[lang].player);
 
   let activeItem = $state<ArchiveItem | null>(null);
   let isOpen = $state(false);
@@ -122,18 +126,18 @@
 
       <div class="sticky bottom-0 z-20 p-6 sm:p-7 bg-[#0a0a0d]/95 backdrop-blur-xl flex flex-wrap items-center gap-6 border-0">
         <VaultKineticButton
-          label="Abrir en YouTube"
+          label={t.openYoutube}
           icon="external"
           href={`https://www.youtube.com/watch?v=${activeItem.id}`}
           target="_blank"
         />
 
         <VaultKineticButton
-          label="Copiar enlace"
+          label={t.copyLink}
           icon="copy"
           onclick={copyLink}
           isSuccess={copied}
-          successLabel="¡Enlace copiado!"
+          successLabel={t.copiedLink}
         />
       </div>
     </aside>

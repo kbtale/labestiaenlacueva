@@ -1,5 +1,6 @@
 <script lang="ts">
   import VaultCapsuleButton from './VaultCapsuleButton.svelte';
+  import { getLang, translations } from './i18n.svelte';
 
   interface Props {
     dist: number;
@@ -7,6 +8,9 @@
   }
 
   let { dist, onExplore }: Props = $props();
+
+  let lang = $derived(getLang());
+  let t = $derived(translations[lang].hero);
 
   let progress = $derived(Math.min(1, Math.max(0, dist / 85)));
   let heroOpacity = $derived(Math.pow(1 - progress, 2.2));
@@ -21,13 +25,13 @@
   <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 pb-2 sm:pb-8">
     <div class="max-w-md pointer-events-auto">
       <p class="font-body text-xs sm:text-base text-[#d4d4d8] leading-relaxed">
-        Explora los gustos y disgustos, recomendaciones, reflexiones y todo aquello que he considerado valioso para compartir. Haz scroll para adentrarte en mi cueva.
+        {t.tagline}
       </p>
     </div>
 
     <div class="pointer-events-auto flex items-center">
       <VaultCapsuleButton
-        label="Explorar colecciones"
+        label={t.exploreBtn}
         icon="arrow-down"
         onclick={onExplore}
         class="scale-90 origin-left sm:scale-100"

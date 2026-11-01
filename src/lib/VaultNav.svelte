@@ -4,6 +4,7 @@
   import VaultCapsuleButton from './VaultCapsuleButton.svelte';
   import VaultKineticButton from './VaultKineticButton.svelte';
   import VaultDrawer from './VaultDrawer.svelte';
+  import { getLang, translations, toggleLang } from './i18n.svelte';
   import type { ArchiveItem } from './VaultEngine';
 
   interface Props {
@@ -25,6 +26,9 @@
     onModalChange
   }: Props = $props();
 
+  let lang = $derived(getLang());
+  let t = $derived(translations[lang]);
+
   let activeModal = $state<'about' | 'socials' | 'contact' | 'sections' | null>(null);
   let archiveItems = $state<ArchiveItem[]>([]);
   let selectedSection = $state<string>('Vídeos que Pondría en un Museo');
@@ -32,6 +36,12 @@
   let isDropdownOpen = $state(false);
   let isCopiedEmail = $state(false);
   let githubStars = $state<number>(2);
+
+  let contactName = $state('');
+  let contactEmail = $state('');
+  let contactSubject = $state('');
+  let contactMessage = $state('');
+  let contactStatus = $state<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   const isAtRest = $derived(dist < 30);
   const starsLabel = $derived(`★ ${githubStars}`);
@@ -44,6 +54,56 @@
   let filteredVideos = $derived(
     archiveItems.filter(v => v.playlist === selectedSection)
   );
+
+  async function handleSubmitContact(e: SubmitEvent) {
+    e.preventDefault();
+    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) return;
+
+    contactStatus = 'sending';
+
+    const accessKey = (import.meta as any).env?.VITE_WEB3FORMS_ACCESS_KEY || '';
+
+    if (!accessKey) {
+      const subject = contactSubject.trim() || (lang === 'es' ? 'Contacto desde la web' : 'Website inquiry');
+      const body = encodeURIComponent(`De: ${contactName.trim()} <${contactEmail.trim()}>\n\n${contactMessage.trim()}`);
+      window.location.href = `mailto:labestiaelc@gmail.com?subject=${encodeURIComponent(subject)}&body=${body}`;
+      contactStatus = 'idle';
+      return;
+    }
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          access_key: accessKey,
+          name: contactName.trim(),
+          email: contactEmail.trim(),
+          subject: contactSubject.trim() || (lang === 'es' ? 'Mensaje desde la web' : 'Website inquiry'),
+          message: contactMessage.trim(),
+          from_name: 'La Bestia en la Cueva'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        contactStatus = 'success';
+        contactName = '';
+        contactEmail = '';
+        contactSubject = '';
+        contactMessage = '';
+        setTimeout(() => {
+          contactStatus = 'idle';
+        }, 5000);
+      } else {
+        throw new Error(data.message || 'Error');
+      }
+    } catch {
+      contactStatus = 'error';
+    }
+  }
 
   $effect(() => {
     onModalChange?.(activeModal !== null);
@@ -172,20 +232,31 @@
   <nav
     class="vault-brand-menu mt-2.5 sm:mt-0 flex items-center justify-center gap-3 sm:gap-9 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-5 scale-[0.96] pointer-events-none'}"
   >
-    <VaultRollLink label="Mis secciones" onclick={() => activeModal = 'sections'} />
-    <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
-    <VaultRollLink label="Mis redes" onclick={() => activeModal = 'socials'} />
-    <VaultRollLink label="Contacto" onclick={() => activeModal = 'contact'} />
+    <VaultRollLink label={t.nav.sections} onclick={() => activeModal = 'sections'} />
+    <VaultRollLink label={t.nav.about} onclick={() => activeModal = 'about'} />
+    <VaultRollLink label={t.nav.socials} onclick={() => activeModal = 'socials'} />
+    <VaultRollLink label={t.nav.contact} onclick={() => activeModal = 'contact'} />
   </nav>
 
-  <div class="hidden sm:block w-[116px] pointer-events-none"></div>
+  <div
+    class="w-full sm:w-[116px] flex items-center justify-end mt-2 sm:mt-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-5 scale-[0.96] pointer-events-none'}"
+  >
+    <button
+      type="button"
+      onclick={() => toggleLang()}
+      class="px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 hover:border-white/25 font-ui text-[11px] font-semibold tracking-wider uppercase transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+      aria-label="Switch language"
+    >
+      {lang.toUpperCase()}
+    </button>
+  </div>
 </header>
 
 <div
   class="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-12 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
 >
   <VaultCapsuleButton
-    label="Volver"
+    label={t.nav.back}
     icon="rewind"
     onclick={onRewind}
     class="scale-90 sm:scale-100"
@@ -272,24 +343,24 @@
 
 <VaultDrawer
   open={activeModal === 'about'}
-  title="Sobre mí"
+  title={t.about.title}
   maxWidth="max-w-xl"
   onClose={() => activeModal = null}
   onCloseStart={() => onModalChange?.(false)}
 >
   <div class="space-y-4 font-ui text-xs sm:text-sm text-neutral-300 leading-relaxed">
     <p class="font-body text-sm sm:text-base text-neutral-200 leading-relaxed">
-      Soy un encaprichado del aprendizaje y del conocimiento. Mis intereses son, a veces demasiado, variados, aunque siempre he pensado que todo en este universo, y quizás también fuera del mismo, se conecta de una u otra manera. Esto me ha llevado por una inmensidad de caminos a lo largo de mi vida y, si bien sería feliz de compartir lo aprendido, por el momento he considerado más interesante compartir los medios de cómo lo aprendí. De ahí que en esta morada halles los libros, ensayos, vídeos, artículos y diferentes reflexiones que me han construido e influenciado de algún modo.
+      {t.about.p1}
     </p>
     <p class="font-body text-sm sm:text-base text-neutral-200 leading-relaxed">
-      Siéntete libre de usar el menú de contacto para sugerirme. Intento leer todo lo que me llega, aunque requeriré tiempo para ello.
+      {t.about.p2}
     </p>
     <p class="font-body text-sm sm:text-base text-neutral-200 leading-relaxed">
-      También puedes donar si te gustan las cosas que hago, ya sean mis proyectos de tecnología o lo que publico. Todo lo donado por este medio irá destinado a mejorar el contenido y los proyectos. Puedes revisar el código fuente de este repositorio <a href="https://github.com/kbtale/labestiaenlacueva" target="_blank" rel="noopener noreferrer" class="text-white underline hover:text-white/80 transition-colors">haciendo click aquí</a>.
+      {t.about.p3}<a href="https://github.com/kbtale/labestiaenlacueva" target="_blank" rel="noopener noreferrer" class="text-white underline hover:text-white/80 transition-colors">{t.about.clickHere}</a>
     </p>
     <div class="pt-2 flex flex-wrap gap-4 items-center">
       <VaultCapsuleButton
-        label="Donar en Ko-fi"
+        label={t.about.donateBtn}
         icon="external"
         href="https://ko-fi.com/U7U11S2E9Q"
         target="_blank"
@@ -300,7 +371,7 @@
 
 <VaultDrawer
   open={activeModal === 'socials'}
-  title="Mis redes"
+  title={t.socials.title}
   onClose={() => activeModal = null}
   onCloseStart={() => onModalChange?.(false)}
 >
@@ -320,76 +391,98 @@
 
 <VaultDrawer
   open={activeModal === 'contact'}
-  title="Contacto"
+  title={t.contact.title}
   onClose={() => activeModal = null}
   onCloseStart={() => onModalChange?.(false)}
 >
   <form
-    onsubmit={(e) => {
-      e.preventDefault();
-      const form = e.currentTarget as HTMLFormElement;
-      const name = (form.elements.namedItem('name') as HTMLInputElement)?.value || '';
-      const subject = (form.elements.namedItem('subject') as HTMLInputElement)?.value || 'Contacto desde la web';
-      const msg = (form.elements.namedItem('message') as HTMLTextAreaElement)?.value || '';
-      const body = encodeURIComponent(`De: ${name}\n\n${msg}`);
-      window.location.href = `mailto:labestiaelc@gmail.com?subject=${encodeURIComponent(subject)}&body=${body}`;
-    }}
+    onsubmit={handleSubmitContact}
     class="space-y-4 font-ui text-xs"
   >
     <div class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5">
       <div>
-        <div class="text-[10px] uppercase tracking-wider text-neutral-400 font-ui font-semibold">Destinatario</div>
+        <div class="text-[10px] uppercase tracking-wider text-neutral-400 font-ui font-semibold">{t.contact.recipient}</div>
         <div class="text-white text-xs select-all font-medium mt-0.5">labestiaelc@gmail.com</div>
       </div>
       <VaultCapsuleButton
-        label={isCopiedEmail ? "¡Copiado!" : "Copiar correo"}
+        label={isCopiedEmail ? t.contact.copied : t.contact.copyEmail}
         icon="copy"
         onclick={handleCopyEmail}
       />
     </div>
 
-    <div class="space-y-1.5">
-      <label for="contact-name" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Nombre o alias</label>
-      <input
-        id="contact-name"
-        name="name"
-        type="text"
-        required
-        placeholder="Tu nombre"
-        class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
-      />
-    </div>
+    {#if contactStatus === 'success'}
+      <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-3">
+        <svg class="w-4 h-4 shrink-0 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>{t.contact.sentSuccess}</span>
+      </div>
+    {:else}
+      {#if contactStatus === 'error'}
+        <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs flex flex-col gap-2">
+          <span>{t.contact.sendError} <a href="mailto:labestiaelc@gmail.com" class="text-white underline">labestiaelc@gmail.com</a>.</span>
+        </div>
+      {/if}
 
-    <div class="space-y-1.5">
-      <label for="contact-subject" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Asunto</label>
-      <input
-        id="contact-subject"
-        name="subject"
-        type="text"
-        required
-        placeholder="Propuesta, colaboración, comentario..."
-        class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
-      />
-    </div>
+      <div class="space-y-1.5">
+        <label for="contact-name" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">{t.contact.nameLabel}</label>
+        <input
+          id="contact-name"
+          name="name"
+          type="text"
+          required
+          bind:value={contactName}
+          placeholder={t.contact.namePlaceholder}
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
+        />
+      </div>
 
-    <div class="space-y-1.5">
-      <label for="contact-message" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Mensaje</label>
-      <textarea
-        id="contact-message"
-        name="message"
-        rows="4"
-        required
-        placeholder="Escribe tu mensaje aquí..."
-        class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors resize-none"
-      ></textarea>
-    </div>
+      <div class="space-y-1.5">
+        <label for="contact-email" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">{t.contact.emailLabel}</label>
+        <input
+          id="contact-email"
+          name="email"
+          type="email"
+          required
+          bind:value={contactEmail}
+          placeholder={t.contact.emailPlaceholder}
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
+        />
+      </div>
 
-    <div class="pt-2 flex justify-end">
-      <VaultCapsuleButton
-        type="submit"
-        label="Enviar mensaje"
-        icon="arrow-right"
-      />
-    </div>
+      <div class="space-y-1.5">
+        <label for="contact-subject" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">{t.contact.subjectLabel}</label>
+        <input
+          id="contact-subject"
+          name="subject"
+          type="text"
+          bind:value={contactSubject}
+          placeholder={t.contact.subjectPlaceholder}
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
+        />
+      </div>
+
+      <div class="space-y-1.5">
+        <label for="contact-message" class="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">{t.contact.messageLabel}</label>
+        <textarea
+          id="contact-message"
+          name="message"
+          rows="4"
+          required
+          bind:value={contactMessage}
+          placeholder={t.contact.messagePlaceholder}
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white/30 transition-colors resize-none"
+        ></textarea>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <VaultCapsuleButton
+          type="submit"
+          label={contactStatus === 'sending' ? t.contact.sendingBtn : t.contact.sendBtn}
+          icon="arrow-right"
+        />
+      </div>
+    {/if}
   </form>
 </VaultDrawer>
