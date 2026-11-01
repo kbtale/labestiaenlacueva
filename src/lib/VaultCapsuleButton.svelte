@@ -16,6 +16,8 @@
     target,
     class: className = ''
   }: Props = $props();
+
+  let isHovered = $state(false);
 </script>
 
 {#if href}
@@ -23,7 +25,10 @@
     {href}
     {target}
     {onclick}
+    onmouseenter={() => (isHovered = true)}
+    onmouseleave={() => (isHovered = false)}
     class="vault-capsule-button {className}"
+    class:hovered={isHovered}
   >
     <span class="vault-capsule-backdrop"></span>
 
@@ -85,7 +90,10 @@
   <button
     type="button"
     {onclick}
+    onmouseenter={() => (isHovered = true)}
+    onmouseleave={() => (isHovered = false)}
     class="vault-capsule-button {className}"
+    class:hovered={isHovered}
   >
     <span class="vault-capsule-backdrop"></span>
 
@@ -151,22 +159,22 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 42px;
-    padding: 8px 58px 8px 20px;
+    height: 46px;
+    padding: 10px 58px 10px 24px;
     border: 0;
     outline: none;
     border-radius: 9999px;
     user-select: none;
     cursor: pointer;
-    text-transform: uppercase;
+    text-decoration: none;
+    text-transform: none;
     font-family: var(--font-ui);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    color: #ffffff;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: #000000;
     background: transparent;
-    overflow: hidden;
-    transition: padding 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transition: padding 0.42s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -174,58 +182,57 @@
     transform: scale(0.96);
   }
 
-  .vault-capsule-button:hover {
-    padding: 8px 76px 8px 16px;
+  .vault-capsule-button:hover,
+  .vault-capsule-button.hovered {
+    padding: 10px 72px 10px 18px;
   }
 
   .vault-capsule-backdrop {
     position: absolute;
-    inset: 0;
+    top: 6px;
+    right: 6px;
+    height: calc(100% - 12px);
+    width: calc(100% - 12px);
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: #ffffff;
     pointer-events: none;
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.16);
     transition: width 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                height 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                top 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                right 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                left 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                background-color 0.35s ease,
                 box-shadow 0.35s ease;
   }
 
-  .vault-capsule-button:hover .vault-capsule-backdrop {
-    width: 28px;
-    height: 28px;
-    top: 7px;
-    right: 7px;
-    left: unset;
-    bottom: unset;
-    background: #ffffff;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.45);
+  .vault-capsule-button:hover .vault-capsule-backdrop,
+  .vault-capsule-button.hovered .vault-capsule-backdrop {
+    width: 34px;
+    box-shadow: 0 0 24px rgba(255, 255, 255, 0.45);
   }
 
   .vault-capsule-label {
     position: relative;
     z-index: 5;
     white-space: nowrap;
+    color: #000000;
+    transition: color 0.32s ease;
+  }
+
+  .vault-capsule-button:hover .vault-capsule-label,
+  .vault-capsule-button.hovered .vault-capsule-label {
     color: #ffffff;
-    transition: color 0.3s ease;
   }
 
   .vault-capsule-orb-stage {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 42px;
-    height: 42px;
+    top: 6px;
+    right: 6px;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
     z-index: 10;
+    overflow: hidden;
+    border-radius: 50%;
   }
 
   .vault-capsule-icon {
@@ -235,34 +242,34 @@
     justify-content: center;
     width: 16px;
     height: 16px;
+    color: #000000;
     transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.32s ease,
-                color 0.32s ease;
+                opacity 0.32s ease;
   }
 
   .vault-svg {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
   }
 
   .vault-icon-primary {
-    color: #ffffff;
     transform: translateX(0);
     opacity: 1;
   }
 
-  .vault-capsule-button:hover .vault-icon-primary {
+  .vault-capsule-button:hover .vault-icon-primary,
+  .vault-capsule-button.hovered .vault-icon-primary {
     transform: translateX(36px);
     opacity: 0;
   }
 
   .vault-icon-secondary {
-    color: #000000;
     transform: translateX(-36px);
     opacity: 0;
   }
 
-  .vault-capsule-button:hover .vault-icon-secondary {
+  .vault-capsule-button:hover .vault-icon-secondary,
+  .vault-capsule-button.hovered .vault-icon-secondary {
     transform: translateX(0);
     opacity: 1;
   }
