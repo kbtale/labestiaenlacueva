@@ -621,35 +621,26 @@ export class VaultEngine {
       this.attrFill.setX(i, w.hideFly ? 1 : 0);
       this.attrCase.setX(i, 0);
     } else {
-      if (c[9] === 1) {
-        w.h0 = 0;
-        w.h = 0;
-        w.hideFly = true;
-        this.attrDim.setX(i, 0);
-        this.attrFill.setX(i, 1);
-        this.attrCase.setX(i, 0);
-      } else {
-        const r = rng(i + 1, epoch);
-        const k = (d + epoch * CYCLE_PERIOD) / D.D0;
-        const col = c[5];
-        const row = c[6];
-        const jx = (r() - 0.5) * 6.0 * k;
-        const jy = (r() - 0.5) * 6.0 * k;
-        w.pos.set(
-          (col + 0.5 - D.cols / 2) * D.cell[0] * k + jx,
-          (D.rows / 2 - row - 0.5) * D.cell[1] * k + jy,
-          -(d + epoch * CYCLE_PERIOD)
-        );
-        w.base.copy(w.pos);
-        w.h0 = D.cell[1] * k * 0.94;
-        w.hs = c[7] ?? (0.65 + r() * 0.7);
-        w.h = w.h0 * w.hs;
-        const inLane = Math.abs(w.pos.x) < RUNWAY.rx * 0.65 && Math.abs(w.pos.y) < RUNWAY.ry * 0.65;
-        w.hideFly = inLane;
-        this.attrDim.setX(i, c[8] ?? 1.0);
-        this.attrFill.setX(i, inLane ? 1 : 0);
-        this.attrCase.setX(i, 0);
-      }
+      const r = rng(i + 1, epoch);
+      const k = (d + epoch * CYCLE_PERIOD) / D.D0;
+      const col = c[5];
+      const row = c[6];
+      const jx = (r() - 0.5) * 6.0 * k;
+      const jy = (r() - 0.5) * 6.0 * k;
+      w.pos.set(
+        (col + 0.5 - D.cols / 2) * D.cell[0] * k + jx,
+        (D.rows / 2 - row - 0.5) * D.cell[1] * k + jy,
+        -(d + epoch * CYCLE_PERIOD)
+      );
+      w.base.copy(w.pos);
+      w.h0 = D.cell[1] * k * 0.94;
+      w.hs = c[7] ?? (0.65 + r() * 0.7);
+      w.h = w.h0 * w.hs;
+      const inLane = Math.abs(w.pos.x) < RUNWAY.rx * 0.65 && Math.abs(w.pos.y) < RUNWAY.ry * 0.65;
+      w.hideFly = inLane;
+      this.attrDim.setX(i, 1.0);
+      this.attrFill.setX(i, inLane ? 1 : 0);
+      this.attrCase.setX(i, 0);
     }
 
     this.vS.set(w.h, w.h, 1);
