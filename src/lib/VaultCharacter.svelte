@@ -52,7 +52,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -64,7 +64,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -76,7 +76,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -88,7 +88,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -100,7 +100,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -112,7 +112,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -124,7 +124,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -136,7 +136,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[1]}
   />
   <path
@@ -148,7 +148,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[0]}
   />
   <path
@@ -160,7 +160,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -172,7 +172,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -184,7 +184,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -196,7 +196,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -208,7 +208,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -220,7 +220,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -232,7 +232,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -244,7 +244,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -256,7 +256,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -268,7 +268,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -280,7 +280,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -292,7 +292,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -304,7 +304,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -316,7 +316,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -328,7 +328,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[2]}
   />
   <path
@@ -340,7 +340,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -352,7 +352,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -364,7 +364,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -376,7 +376,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -388,7 +388,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -400,7 +400,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -412,7 +412,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -424,7 +424,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -436,7 +436,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -448,7 +448,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -460,7 +460,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -472,7 +472,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -484,7 +484,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   <path
@@ -496,7 +496,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     pathLength="1"
-    stroke-dasharray="1"
+    stroke-dasharray="1 1.05"
     stroke-dashoffset={tierOffsets[3]}
   />
   </g>

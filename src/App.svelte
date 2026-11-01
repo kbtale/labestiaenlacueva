@@ -69,6 +69,7 @@
     onFilterChange={handleFilterChange}
     onRewind={handleRewind}
     onExplore={handleExplore}
+    onSelectVideo={handleSelect}
   />
 
   <VaultHero

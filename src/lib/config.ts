@@ -2,7 +2,7 @@ import type { SiteConfig } from './types';
 
 export const siteConfig: SiteConfig = {
   name: 'La Bestia En La Cueva',
-  officialEmail: 'contact@labestiaenlacueva.com',
+  officialEmail: 'labestiaelc@gmail.com',
   socials: [
     { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/@LaBestiaenlaCueva', handle: '@LaBestiaenlaCueva' },
     { id: 'discord', name: 'Discord', url: 'https://discord.gg/yjSttHDpU3', handle: 'Terminus' },

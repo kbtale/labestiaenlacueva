@@ -9,15 +9,16 @@
 </script>
 
 <div
-  class="fixed bottom-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-300 ease-out {hoveredItem ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}"
+  class="fixed top-6 sm:top-8 left-1/2 -translate-x-1/2 z-40 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {hoveredItem ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}"
 >
   {#if hoveredItem}
-    <div class="flex flex-col items-center text-center bg-[#0d0e11]/85 backdrop-blur-md px-6 py-2.5 rounded-2xl border border-white/10 shadow-2xl max-w-[85vw] sm:max-w-md">
-      <span class="font-ui text-sm sm:text-base font-medium text-[#ededed] leading-snug line-clamp-1">
-        {hoveredItem.title}
-      </span>
-      <span class="font-ui text-xs text-[#ededed]/45 tracking-wide mt-0.5">
+    <div class="flex items-center gap-2.5 bg-[#0c0d12]/92 backdrop-blur-xl px-4 sm:px-5 py-2 rounded-full border border-white/10 max-w-[90vw] sm:max-w-xl">
+      <span class="font-ui text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/10 text-white/80 shrink-0">
         {hoveredItem.playlist}
+      </span>
+      <span class="w-1 h-1 rounded-full bg-white/20 shrink-0 hidden sm:inline-block"></span>
+      <span class="font-ui text-xs sm:text-sm text-white font-medium truncate">
+        {hoveredItem.title}
       </span>
     </div>
   {/if}

@@ -129,6 +129,7 @@ export class VaultEngine {
   
   private fr = { cx: 0, cy: 0, w: 0, h: 0, ready: false };
   private isDrawerOpen = false;
+  private pendingSelect: ArchiveItem | null = null;
 
   private hoveredIndex = -1;
   private activeFilter: string | null = null;
@@ -800,6 +801,7 @@ export class VaultEngine {
   }
 
   private pushDelta(dy: number) {
+    this.pendingSelect = null;
     if (this.rewind) {
       this.rewind = null;
       this.targetDist = this.dist;
@@ -859,8 +861,10 @@ export class VaultEngine {
             const distDiff = Math.abs(this.dist - focusDist);
 
             if (distDiff > 25) {
+              this.pendingSelect = item;
               this.flyTo(focusDist);
             } else {
+              this.pendingSelect = null;
               this.onSelectCallback(item);
             }
           }
@@ -1128,6 +1132,11 @@ export class VaultEngine {
       this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 2.8));
       if (Math.abs(this.targetDist - this.dist) < 0.01) {
         this.dist = this.targetDist;
+      }
+      if (this.pendingSelect && Math.abs(this.targetDist - this.dist) < 2.0) {
+        const itemToSelect = this.pendingSelect;
+        this.pendingSelect = null;
+        this.onSelectCallback(itemToSelect);
       }
     }
 
