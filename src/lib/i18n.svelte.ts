@@ -1,6 +1,19 @@
 export type Lang = 'es' | 'en';
 
-let currentLang = $state<Lang>('es');
+function detectInitialLang(): Lang {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('vault_lang') as Lang | null;
+      if (saved === 'es' || saved === 'en') return saved;
+    } catch {}
+    const navLang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
+    if (navLang.startsWith('es')) return 'es';
+    return 'en';
+  }
+  return 'es';
+}
+
+let currentLang = $state<Lang>(detectInitialLang());
 
 export function getLang(): Lang {
   return currentLang;
@@ -8,127 +21,112 @@ export function getLang(): Lang {
 
 export function setLang(lang: Lang) {
   currentLang = lang;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('vault_lang', lang);
+    } catch {}
+  }
 }
 
 export function toggleLang() {
-  currentLang = currentLang === 'es' ? 'en' : 'es';
+  setLang(currentLang === 'es' ? 'en' : 'es');
 }
 
 export const translations = {
   es: {
     nav: {
-      brand: 'LA BESTIA EN LA CUEVA',
-      about: 'Inicio',
-      playlist: 'YouTube',
-      tiktok: 'TikTok',
-      projects: 'Proyectos',
+      sections: 'Mis secciones',
+      about: 'Sobre mí',
+      socials: 'Mis redes',
       contact: 'Contacto',
-      getInTouch: 'Contactar',
+      back: 'Volver',
+      lang: 'ES'
     },
     hero: {
-      title: 'La Bestia En La Cueva',
-      btnExplore: 'Ver Contenido',
-      btnContact: 'Contacto',
-      socialsHeader: 'Canales y Perfiles',
+      tagline: 'Explora los gustos y disgustos, recomendaciones, reflexiones y todo aquello que he considerado valioso para compartir. Haz scroll para adentrarte en mi cueva.',
+      exploreBtn: 'Explorar colecciones'
     },
-    playlist: {
-      title: 'Producciones y Series',
-      videoCount: 'Videos disponibles',
-      videoLabel: 'Video',
-      of: 'de',
-      views: 'vistas',
-      btnYoutube: 'Canal de YouTube',
-      emptyTitle: 'Sin publicaciones activas en la playlist',
+    about: {
+      title: 'Sobre mí',
+      p1: 'Soy un encaprichado del aprendizaje y del conocimiento. Mis intereses son, a veces demasiado, variados, aunque siempre he pensado que todo en este universo, y quizás también fuera del mismo, se conecta de una u otra manera. Esto me ha llevado por una inmensidad de caminos a lo largo de mi vida y, si bien sería feliz de compartir lo aprendido, por el momento he considerado más interesante compartir los medios de cómo lo aprendí. De ahí que en esta morada halles los libros, ensayos, vídeos, artículos y diferentes reflexiones que me han construido e influenciado de algún modo.',
+      p2: 'Siéntete libre de usar el menú de contacto para sugerirme. Intento leer todo lo que me llega, aunque requeriré tiempo para ello.',
+      p3: 'También puedes donar si te gustan las cosas que hago, ya sean mis proyectos de tecnología o lo que publico. Todo lo donado por este medio irá destinado a mejorar el contenido y los proyectos. Puedes revisar el código fuente de este repositorio ',
+      clickHere: 'haciendo click aquí.',
+      donateBtn: 'Donar en Ko-fi'
     },
-    tiktok: {
-      title: 'Contenido Corto',
-      watch: 'Ver en TikTok',
-      btnProfile: 'Perfil de TikTok',
-      emptyTitle: 'Sin clips cargados',
-    },
-    projects: {
-      title: 'Desarrollos y Código',
-      sourceCode: 'Código',
-      liveProject: 'Sitio Web',
-      emptyTitle: 'Repositorio en preparación',
+    socials: {
+      title: 'Mis redes'
     },
     contact: {
       title: 'Contacto',
-      directTitle: 'Escríbeme un mensaje',
-      emailLabel: 'Correo Electrónico',
+      recipient: 'Destinatario',
+      copyEmail: 'Copiar correo',
       copied: '¡Copiado!',
-      copy: 'Copiar',
-      responseTime: 'Respuesta estimada: 24 a 48 horas laborales.',
-      nameLabel: 'Nombre',
-      namePlaceholder: 'Tu nombre o empresa',
-      emailInputLabel: 'Correo Electrónico',
-      emailInputPlaceholder: 'nombre@ejemplo.com',
+      nameLabel: 'Nombre o alias',
+      namePlaceholder: 'Tu nombre',
+      emailLabel: 'Tu correo',
+      emailPlaceholder: 'tu@correo.com',
+      subjectLabel: 'Asunto',
+      subjectPlaceholder: 'Propuesta, colaboración, comentario...',
       messageLabel: 'Mensaje',
-      messagePlaceholder: 'Detalla tu propuesta o consulta...',
-      btnSend: 'Enviar Mensaje',
-      btnSent: 'Mensaje Enviado',
+      messagePlaceholder: 'Escribe tu mensaje aquí...',
+      sendBtn: 'Enviar mensaje',
+      sendingBtn: 'Enviando...',
+      sentSuccess: '¡Mensaje enviado con éxito! Te responderé pronto.',
+      sendError: 'Hubo un error al enviar. Puedes escribir directamente a'
     },
-    footer: {
-      rights: 'Todos los derechos reservados.',
-      stack: 'Svelte 5 y UnoCSS',
+    player: {
+      openYoutube: 'Abrir en YouTube',
+      copyLink: 'Copiar enlace',
+      copiedLink: '¡Enlace copiado!'
     }
   },
   en: {
     nav: {
-      brand: 'LA BESTIA EN LA CUEVA',
-      about: 'Home',
-      playlist: 'YouTube',
-      tiktok: 'TikTok',
-      projects: 'Projects',
+      sections: 'My sections',
+      about: 'About me',
+      socials: 'My socials',
       contact: 'Contact',
-      getInTouch: 'Get in Touch',
+      back: 'Back',
+      lang: 'EN'
     },
     hero: {
-      title: 'La Bestia En La Cueva',
-      btnExplore: 'Explore Media',
-      btnContact: 'Contact',
-      socialsHeader: 'Channels and Profiles',
+      tagline: 'Explore likes and dislikes, recommendations, reflections, and everything I have deemed worthy of sharing. Scroll to venture into my cave.',
+      exploreBtn: 'Explore collections'
     },
-    playlist: {
-      title: 'Productions and Series',
-      videoCount: 'Available videos',
-      videoLabel: 'Video',
-      of: 'of',
-      views: 'views',
-      btnYoutube: 'YouTube Channel',
-      emptyTitle: 'No active playlist entries',
+    about: {
+      title: 'About me',
+      p1: 'I am an obsessive pursuer of learning and knowledge. My interests are, at times overly, varied, although I have always believed that everything in this universe, and perhaps outside of it as well, connects in one way or another. This has led me down countless paths throughout my life, and while I would be delighted to share what I have learned, for now I have found it more compelling to share the means through which I learned it. Hence, in this dwelling you will find the books, essays, videos, articles, and varied reflections that have shaped and influenced me.',
+      p2: 'Feel free to use the contact menu to send suggestions. I try to read everything that reaches me, though it requires time.',
+      p3: 'You can also donate if you like the things I build, whether my tech projects or publications. Everything donated here goes directly towards improving content and projects. You can check out the source code of this repository ',
+      clickHere: 'by clicking here.',
+      donateBtn: 'Donate on Ko-fi'
     },
-    tiktok: {
-      title: 'Short Form',
-      watch: 'Watch on TikTok',
-      btnProfile: 'TikTok Profile',
-      emptyTitle: 'No short clips loaded',
-    },
-    projects: {
-      title: 'Engineering and Code',
-      sourceCode: 'Code',
-      liveProject: 'Live Site',
-      emptyTitle: 'Repository in preparation',
+    socials: {
+      title: 'My socials'
     },
     contact: {
       title: 'Contact',
-      directTitle: 'Send a message',
-      emailLabel: 'Email Address',
+      recipient: 'Recipient',
+      copyEmail: 'Copy email',
       copied: 'Copied!',
-      copy: 'Copy',
-      responseTime: 'Estimated response time: 24 to 48 business hours.',
-      nameLabel: 'Name',
-      namePlaceholder: 'Your name or organization',
-      emailInputLabel: 'Email Address',
-      emailInputPlaceholder: 'name@example.com',
+      nameLabel: 'Name or alias',
+      namePlaceholder: 'Your name',
+      emailLabel: 'Your email',
+      emailPlaceholder: 'you@email.com',
+      subjectLabel: 'Subject',
+      subjectPlaceholder: 'Proposal, collaboration, thoughts...',
       messageLabel: 'Message',
-      messagePlaceholder: 'Describe your proposal or inquiry...',
-      btnSend: 'Send Message',
-      btnSent: 'Message Sent',
+      messagePlaceholder: 'Write your message here...',
+      sendBtn: 'Send message',
+      sendingBtn: 'Sending...',
+      sentSuccess: 'Message sent successfully! I will get back to you soon.',
+      sendError: 'There was an error sending. You can write directly to'
     },
-    footer: {
-      rights: 'All rights reserved.',
-      stack: 'Svelte 5 and UnoCSS',
+    player: {
+      openYoutube: 'Open on YouTube',
+      copyLink: 'Copy link',
+      copiedLink: 'Link copied!'
     }
   }
 };
