@@ -1,6 +1,7 @@
 <script lang="ts">
   import VaultRollLink from './VaultRollLink.svelte';
   import VaultDrawer from './VaultDrawer.svelte';
+  import VaultCapsuleButton from './VaultCapsuleButton.svelte';
 
   interface Props {
     activeFilter: string | null;
@@ -69,19 +70,7 @@
 </script>
 
 <header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-between min-h-[72px] sm:min-h-[80px]">
-  <div class="pointer-events-auto flex items-center gap-3 min-w-[36px]">
-    {#if !isAtRest}
-      <button
-        onclick={onRewind}
-        class="vault-nav-rewind font-ui text-xs font-semibold px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-300 shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 cursor-pointer border-0"
-      >
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-        <span>Volver</span>
-      </button>
-    {/if}
-  </div>
+  <div class="pointer-events-auto flex items-center gap-3 min-w-[36px]"></div>
 
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
     <nav
@@ -91,19 +80,6 @@
       <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
       <VaultRollLink label="Mis redes" onclick={() => activeModal = 'socials'} />
       <VaultRollLink label="Contacto" onclick={() => activeModal = 'contact'} />
-    </nav>
-
-    <nav
-      class="vault-filter-bar pointer-events-auto flex items-center gap-1.5 bg-[#121316]/95 backdrop-blur-xl px-2.5 py-1.5 rounded-full shadow-2xl overflow-x-auto max-w-[70vw] sm:max-w-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] border-0 {isAtRest ? 'opacity-0 translate-y-2 scale-95 pointer-events-none absolute' : 'opacity-100 translate-y-0 scale-100'}"
-    >
-      {#each playlists as p}
-        <button
-          onclick={() => onFilterChange(p.id)}
-          class="vault-filter-pill font-ui text-xs px-3.5 sm:px-4 py-1.5 rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer border-0 {activeFilter === p.id ? 'bg-white text-black font-semibold shadow' : 'text-neutral-400 hover:text-white hover:bg-white/10'}"
-        >
-          {p.label}
-        </button>
-      {/each}
     </nav>
   </div>
 
@@ -127,6 +103,16 @@
     {/each}
   </div>
 </header>
+
+{#if !isAtRest}
+  <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-auto flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <VaultCapsuleButton
+      label="Volver"
+      icon="rewind"
+      onclick={onRewind}
+    />
+  </div>
+{/if}
 
 <VaultDrawer
   open={activeModal === 'about'}

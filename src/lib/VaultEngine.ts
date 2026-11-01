@@ -170,9 +170,13 @@ export class VaultEngine {
   private world: Array<{
     pos: THREE.Vector3;
     base: THREE.Vector3;
+    galaxyPos: THREE.Vector3;
     h: number;
     h0: number;
     hs: number;
+    galaxyH: number;
+    galaxyActive: boolean;
+    zBase: number;
     hideFly: boolean;
     float?: [number, number, number, number, number];
     from?: THREE.Vector3;
@@ -474,7 +478,7 @@ export class VaultEngine {
           float inner = smoothstep(0.1, 0.0, edge) * (0.14 + 0.07 * sin(uTime * 1.6 + vCase * 30.0));
           c += vec3(1.0, 0.98, 0.95) * (band + inner) * uFog * (1.0 - smoothstep(110.0, 190.0, vDepth));
         }
-        c = mix(c, uBg, smoothstep(520.0, 1500.0, vDepth) * uFog);
+        c = mix(c, uBg, smoothstep(850.0, 2400.0, vDepth) * uFog);
         c = mix(c, uBg, uSoft * 0.45);
         gl_FragColor = vec4(c, 1.0);
       }
@@ -521,20 +525,36 @@ export class VaultEngine {
 
     for (let i = 0; i < this.N; i++) {
       const c = D.cells[i];
+      const isFill = c[9] === 1;
+      const seed = ((i * 2654435761) >>> 0) / 4294967296;
+      const seed2 = ((i * 1013904223 + 1664525) >>> 0) / 4294967296;
+      const seed3 = ((i * 374761393 + 668265263) >>> 0) / 4294967296;
+
+      const zBase = 50.0 + seed * CYCLE_PERIOD;
+      const angle = seed2 * Math.PI * 2;
+      const radius = 24.0 + Math.sqrt(seed3) * 165.0;
+      const gx = Math.cos(angle) * radius;
+      const gy = Math.sin(angle) * radius * 0.72;
+      const gz = -zBase;
+
       const w = {
         pos: new THREE.Vector3(),
         base: new THREE.Vector3(),
+        galaxyPos: new THREE.Vector3(gx, gy, gz),
         h: 0,
         h0: 0,
         hs: 1,
-        hideFly: false,
+        galaxyH: 1.3 + Math.pow(seed3, 1.8) * 4.8,
+        galaxyActive: !isFill,
+        zBase,
+        hideFly: isFill,
         float: undefined as [number, number, number, number, number] | undefined
       };
 
-      const isHalo = c[9] !== 1 && (c[8] ?? 1) < 0.6;
+      const isHalo = !isFill && (c[8] ?? 1) < 0.6;
       if (isHalo) {
-        const seed = (i * 137.5) % 1;
-        w.float = [0.04 + seed * 0.05, 0, seed, i * 0.35, 18 + seed * 25];
+        const sHalo = (i * 137.5) % 1;
+        w.float = [0.04 + sHalo * 0.05, 0, sHalo, i * 0.35, 18 + sHalo * 25];
         this.floaters.push(i);
       }
 
@@ -549,9 +569,13 @@ export class VaultEngine {
       this.world[i] = {
         pos: new THREE.Vector3(0, 0, 1e7),
         base: new THREE.Vector3(0, 0, 1e7),
+        galaxyPos: new THREE.Vector3(0, 0, 1e7),
         h: 0,
         h0: RUNWAY.h,
         hs: 1,
+        galaxyH: RUNWAY.h,
+        galaxyActive: false,
+        zBase: 0,
         hideFly: false
       };
       this.attrDim.setX(i, 1);
@@ -588,6 +612,7 @@ export class VaultEngine {
     const c = D.cells[i];
     const d = c[4];
     const w = this.world[i];
+    const isFill = c[9] === 1;
 
     if (epoch === 0) {
       const col = c[5];
@@ -595,34 +620,35 @@ export class VaultEngine {
       const k = d / D.D0;
       w.h0 = D.cell[1] * k * 0.94;
       w.hs = c[7] ?? 1;
-      w.h = w.h0 * (w.hs + (1 - w.hs) * this.grow);
-      if (c[9] === 1) {
-        w.h0 = 0;
-        w.h = 0;
-      }
-      w.pos.set(
+      const restH = isFill ? 0 : w.h0 * (w.hs + (1 - w.hs) * this.grow);
+      w.base.set(
         (col + 0.5 - D.cols / 2) * D.cell[0] * k,
         (D.rows / 2 - row - 0.5) * D.cell[1] * k,
         -d
       );
-      w.base.copy(w.pos);
-      w.hideFly = !!c[9] || (Math.abs(w.pos.x) < RUNWAY.rx && Math.abs(w.pos.y) < RUNWAY.ry);
-      this.attrDim.setX(i, c[9] === 1 ? 0 : (c[8] ?? 1));
-      this.attrFill.setX(i, w.hideFly ? 1 : 0);
+      if (w.galaxyActive) {
+        w.pos.lerpVectors(w.base, w.galaxyPos, this.grow);
+        w.h = THREE.MathUtils.lerp(restH, w.galaxyH, this.grow);
+      } else {
+        w.pos.copy(w.base);
+        w.h = restH * (1.0 - this.grow);
+      }
+      w.hideFly = isFill;
+      this.attrDim.setX(i, isFill ? 0 : (c[8] ?? 1));
+      this.attrFill.setX(i, isFill ? 1 : 0);
       this.attrCase.setX(i, 0);
-    } else if (i % this.stride !== 0) {
+    } else if (!w.galaxyActive) {
       w.h = 0;
-      w.hideFly = false;
+      w.hideFly = true;
+      this.attrDim.setX(i, 0);
+      this.attrFill.setX(i, 1);
       this.attrCase.setX(i, 0);
     } else {
-      const r = rng(i + 1, epoch);
-      const ang = r() * Math.PI * 2;
-      const rad = RUNWAY.rx + (VORTEX_RADIUS - RUNWAY.rx) * Math.pow(r(), 0.8);
-      w.h = 1.4 + Math.pow(r(), 2.2) * 7;
+      w.h = w.galaxyH;
       w.pos.set(
-        Math.cos(ang) * rad,
-        Math.sin(ang) * rad * 0.8,
-        -(d + epoch * CYCLE_PERIOD)
+        w.galaxyPos.x,
+        w.galaxyPos.y,
+        -(w.zBase + epoch * CYCLE_PERIOD)
       );
       w.hideFly = false;
       this.attrDim.setX(i, 1);
@@ -642,7 +668,7 @@ export class VaultEngine {
     let itemIdx: number;
     if (epoch === 0) {
       itemIdx = this.data!.cells[i][0] % this.data!.entries.length;
-    } else if (!this.world[i].h) {
+    } else if (!this.world[i].h || !this.world[i].galaxyActive) {
       itemIdx = -1;
     } else {
       const key = epoch * this.N + i;
@@ -651,9 +677,8 @@ export class VaultEngine {
         itemIdx = cached;
       } else {
         const M = this.data!.seq.length;
-        const r = rng(i + 3, epoch);
         const ahead = this.runwayIndexAt(-this.world[i].pos.z);
-        const k = (ahead + 10 + Math.floor(r() * 40)) % M;
+        const k = (ahead + (i % 29) + Math.floor(epoch * 7)) % M;
         itemIdx = this.data!.seq[k] % this.data!.entries.length;
         this.epochCache.set(key, itemIdx);
       }
@@ -703,12 +728,20 @@ export class VaultEngine {
 
   private cycleEpochs() {
     if (!this.data) return;
-    const D = this.data;
     for (let i = 0; i < this.N; i++) {
-      const d = D.cells[i][4];
-      const epoch = this.dist > d ? Math.ceil((this.dist - d) / CYCLE_PERIOD) : 0;
-      if (epoch !== this.tileEpoch[i]) {
-        this.setEpoch(i, epoch);
+      const w = this.world[i];
+      if (!w.galaxyActive) continue;
+      const cardZ = w.zBase + this.tileEpoch[i] * CYCLE_PERIOD;
+      if (this.dist > cardZ + 40) {
+        const nextEpoch = Math.floor((this.dist - w.zBase) / CYCLE_PERIOD) + 1;
+        if (nextEpoch !== this.tileEpoch[i]) {
+          this.setEpoch(i, nextEpoch);
+        }
+      } else if (this.dist < cardZ - CYCLE_PERIOD && this.tileEpoch[i] > 0) {
+        const prevEpoch = Math.max(0, Math.floor((this.dist - w.zBase) / CYCLE_PERIOD));
+        if (prevEpoch !== this.tileEpoch[i]) {
+          this.setEpoch(i, prevEpoch);
+        }
       }
     }
   }
@@ -885,10 +918,14 @@ export class VaultEngine {
     const checkLimit = Math.min(this.totalCapacity, this.world.length);
     for (let i = 0; i < checkLimit; i++) {
       const w = this.world[i];
-      if (this.uniforms.uFog.value > 0.3 ? w.hideFly : i >= this.N) continue;
+      if (this.uniforms.uFog.value > 0.3) {
+        if (w.hideFly || w.h < 0.4) continue;
+      } else {
+        if (i >= this.N || w.h < 0.4) continue;
+      }
 
       const zRel = -w.pos.z + this.camera.position.z;
-      if (zRel <= w.h * 1.7 || zRel > 2500.0) continue;
+      if (zRel <= w.h * 1.5 || zRel > 2500.0) continue;
 
       const pxScale = focal / zRel;
       const sx = cx + (w.pos.x - this.camera.position.x) * pxScale;
@@ -1059,12 +1096,17 @@ export class VaultEngine {
   private setGrow(g: number) {
     if (Math.abs(g - this.grow) < 0.002 || !this.mesh || !this.data) return;
     this.grow = g;
-    const D = this.data;
     for (let i = 0; i < this.N; i++) {
-      if (this.tileEpoch[i] !== 0 || D.cells[i][9]) continue;
+      if (this.tileEpoch[i] !== 0) continue;
       const w = this.world[i];
-      w.h = w.h0 * (w.hs + (1.0 - w.hs) * this.grow);
-      if (!w.float) {
+      if (w.galaxyActive) {
+        w.pos.lerpVectors(w.base, w.galaxyPos, this.grow);
+        const baseH = w.h0 * (w.hs + (1.0 - w.hs) * this.grow);
+        w.h = THREE.MathUtils.lerp(baseH, w.galaxyH, this.grow);
+        this.vS.set(w.h, w.h, 1);
+        this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
+      } else if (!w.float) {
+        w.h = w.h0 * (w.hs + (1.0 - w.hs) * this.grow) * (1.0 - this.grow);
         this.vS.set(w.h, w.h, 1);
         this.mesh.setMatrixAt(i, this.m4.compose(w.pos, this.qI, this.vS));
       }

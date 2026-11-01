@@ -14,8 +14,6 @@
   let isDone = $state(false);
   let isFading = $state(false);
 
-  let fillPercentage = $derived(Math.min(100, Math.max(0, shown * 100)));
-
   onMount(() => {
     let t0 = performance.now();
     let last = performance.now();
@@ -56,14 +54,10 @@
     class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0b] transition-all duration-700 ease-out {isFading ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}"
   >
     <div class="relative w-28 h-36 sm:w-32 sm:h-40 flex items-center justify-center">
-      <VaultCharacter class="w-full h-full text-white/15 transition-opacity" />
-
-      <div
-        class="absolute inset-0 flex items-center justify-center transition-all duration-75"
-        style="clip-path: inset({100 - fillPercentage}% 0 0 0);"
-      >
-        <VaultCharacter class="w-full h-full text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.45)]" />
-      </div>
+      <VaultCharacter
+        progress={shown}
+        class="w-full h-full text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.45)] transition-[filter] duration-300"
+      />
     </div>
 
     <div class="mt-6 flex flex-col items-center gap-1.5">
