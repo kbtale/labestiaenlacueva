@@ -144,34 +144,37 @@
   }}
 />
 
-<header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-center min-h-[72px] sm:min-h-[80px]">
+<header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-3.5 sm:p-8 flex flex-col sm:flex-row items-center sm:justify-between min-h-[56px] sm:min-h-[80px]">
+  <div class="w-full sm:w-auto flex items-center justify-start pointer-events-auto">
+    <VaultCapsuleButton
+      label="GitHub"
+      icon="github"
+      href="https://github.com/kbtale/labestiaenlacueva"
+      target="_blank"
+      class="scale-90 origin-left sm:scale-100"
+    />
+  </div>
+
   <nav
-    class="vault-brand-menu flex items-center gap-6 sm:gap-9 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-5 scale-[0.96] pointer-events-none'}"
+    class="vault-brand-menu mt-2.5 sm:mt-0 flex items-center justify-center gap-3 sm:gap-9 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-5 scale-[0.96] pointer-events-none'}"
   >
     <VaultRollLink label="Mis secciones" onclick={() => activeModal = 'sections'} />
     <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
     <VaultRollLink label="Mis redes" onclick={() => activeModal = 'socials'} />
     <VaultRollLink label="Contacto" onclick={() => activeModal = 'contact'} />
   </nav>
+
+  <div class="hidden sm:block w-[116px] pointer-events-none"></div>
 </header>
 
 <div
-  class="fixed top-5 left-5 z-30 flex sm:hidden items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
+  class="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-12 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
 >
   <VaultCapsuleButton
     label="Volver"
     icon="rewind"
     onclick={onRewind}
-  />
-</div>
-
-<div
-  class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 hidden sm:flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-12 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
->
-  <VaultCapsuleButton
-    label="Volver"
-    icon="rewind"
-    onclick={onRewind}
+    class="scale-90 sm:scale-100"
   />
 </div>
 

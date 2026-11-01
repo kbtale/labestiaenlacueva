@@ -482,8 +482,7 @@ export class VaultEngine {
         c = mix(c * 0.15, c, vFilterDim);
         float edge = min(min(vLocal.x, 1.0 - vLocal.x), min(vLocal.y, 1.0 - vLocal.y));
         if (vHover > 0.5) {
-          c = mix(c, vec3(1.0), 0.18);
-          if (edge < 0.025) c = vec3(1.0);
+          c = mix(c, vec3(1.0), 0.12);
         }
         if (vCase > 0.0) {
           float t = fract(uTime * 0.14 + vCase * 7.0);
@@ -783,9 +782,9 @@ export class VaultEngine {
     };
 
     if (!wide && !openPlayer && !openSection) {
-      target.h = this.H * 0.7;
-      target.cy = this.H * 0.475;
-      target.cx = this.W * 0.47;
+      target.h = this.H * 0.62;
+      target.cy = this.H * 0.36;
+      target.cx = this.W * 0.5;
     }
 
     const k = this.fr.ready ? 1 - Math.exp(-dt * 9.5) : 1;
