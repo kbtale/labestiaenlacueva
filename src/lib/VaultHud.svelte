@@ -46,7 +46,7 @@
 
 {#if isMobile && dist >= 30 && activeRunwayItem}
   <div
-    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] max-w-[88vw]"
+    class="fixed top-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] max-w-[88vw]"
   >
     <div class="flex flex-col items-center text-center bg-[#0c0d12]/92 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-white/10">
       <span class="text-[10px] uppercase tracking-wider font-semibold text-white/50 mb-0.5">
