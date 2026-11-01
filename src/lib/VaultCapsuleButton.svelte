@@ -6,6 +6,7 @@
     onclick?: (e: MouseEvent) => void;
     target?: string;
     class?: string;
+    type?: 'button' | 'submit' | 'reset';
   }
 
   let {
@@ -14,7 +15,8 @@
     href,
     onclick,
     target,
-    class: className = ''
+    class: className = '',
+    type = 'button'
   }: Props = $props();
 
   let isHovered = $state(false);
@@ -98,7 +100,7 @@
   </a>
 {:else}
   <button
-    type="button"
+    {type}
     {onclick}
     onmouseenter={() => (isHovered = true)}
     onmouseleave={() => (isHovered = false)}

@@ -57,7 +57,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if isMounted}
-  <div class="vault-drawer-overlay fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+  <div class="vault-drawer-overlay fixed inset-0 z-50 flex items-center justify-center sm:justify-start p-4 sm:p-6 sm:pl-10 md:pl-16 lg:pl-20 pointer-events-none">
     <button
       type="button"
       onclick={handleClose}
@@ -68,7 +68,7 @@
     <div
       role="dialog"
       aria-modal="true"
-      class="vault-drawer-card relative z-10 w-full {maxWidth} bg-[#0c0d12]/98 rounded-2xl p-5 sm:p-7 border border-white/10 backdrop-blur-2xl flex flex-col gap-5 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 translate-y-3 pointer-events-none'}"
+      class="vault-drawer-card relative z-10 w-full {maxWidth} bg-[#0c0d12]/98 rounded-2xl p-5 sm:p-7 border border-white/10 backdrop-blur-2xl flex flex-col gap-5 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-x-6 pointer-events-none'}"
     >
       <div class="flex items-center justify-between gap-4 pb-3.5 border-b border-white/5">
         {#if header}

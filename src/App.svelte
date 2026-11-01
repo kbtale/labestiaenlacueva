@@ -15,6 +15,7 @@
   let selectedItem = $state<ArchiveItem | null>(null);
   let currentDist = $state(0);
   let loadProgress = $state(0.05);
+  let isSectionModalOpen = $state(false);
 
   function handleFilterChange(filter: string | null) {
     activeFilter = filter;
@@ -61,6 +62,7 @@
     bind:this={canvasComponent}
     {activeFilter}
     isDrawerOpen={selectedItem !== null}
+    {isSectionModalOpen}
     onHover={handleHover}
     onSelect={handleSelect}
     onDistChange={handleDistChange}
@@ -74,6 +76,7 @@
     onRewind={handleRewind}
     onExplore={handleExplore}
     onSelectVideo={handleSelect}
+    onModalChange={(open) => isSectionModalOpen = open}
   />
 
   <VaultHero

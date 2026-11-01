@@ -129,6 +129,7 @@ export class VaultEngine {
   
   private fr = { cx: 0, cy: 0, w: 0, h: 0, ready: false };
   private isDrawerOpen = false;
+  private isSectionModalOpen = false;
 
   private hoveredIndex = -1;
   private activeFilter: string | null = null;
@@ -741,29 +742,36 @@ export class VaultEngine {
   private stage(dt: number) {
     if (!this.data) return;
     const wide = this.W > 860;
-    const open = this.isDrawerOpen;
+    const openPlayer = this.isDrawerOpen;
+    const openSection = this.isSectionModalOpen;
 
     let x0 = 0;
     let x1 = this.W;
     let y0 = Math.max(70, this.H * 0.085);
     let y1 = this.H * 1.07;
 
-    if (open) {
+    if (openPlayer) {
       if (wide) {
         x1 = Math.max(this.W * 0.4, this.W - 580);
       } else {
         y1 = this.H * 0.45;
       }
+    } else if (openSection) {
+      if (wide) {
+        x0 = Math.min(this.W * 0.55, 620);
+      } else {
+        y0 = this.H * 0.45;
+      }
     }
 
     const target = {
       cx: (x0 + x1) / 2,
-      cy: (y0 + y1) / 2 - (open ? 0 : this.H * 0.08),
+      cy: (y0 + y1) / 2 - (openPlayer || openSection ? 0 : this.H * 0.08),
       w: x1 - x0,
       h: y1 - y0
     };
 
-    if (!wide && !open) {
+    if (!wide && !openPlayer && !openSection) {
       target.h = this.H * 0.7;
       target.cy = this.H * 0.475;
       target.cx = this.W * 0.47;
@@ -778,7 +786,7 @@ export class VaultEngine {
 
     const fitH = 2 * Math.atan(100 / 1.03 / 2 / 160.0 * (this.H / this.fr.h)) * 180 / Math.PI;
     const fitW = 2 * Math.atan((100 * 0.93418) / 0.96 / 2 / 160.0 / this.camera.aspect * (this.W / this.fr.w)) * 180 / Math.PI;
-    this.camera.fov = wide || open ? Math.max(fitH, fitW) : fitH;
+    this.camera.fov = wide || openPlayer || openSection ? Math.max(fitH, fitW) : fitH;
 
     this.camera.setViewOffset(this.W, this.H, this.W / 2 - this.fr.cx, this.H / 2 - this.fr.cy, this.W, this.H);
     this.camera.updateProjectionMatrix();
@@ -1031,6 +1039,11 @@ export class VaultEngine {
   public setSoft(soft: boolean) {
     this.targetSoft = soft ? 1 : 0;
     this.isDrawerOpen = soft;
+  }
+
+  public setSectionModalOpen(open: boolean) {
+    this.isSectionModalOpen = open;
+    this.targetSoft = open || this.isDrawerOpen ? 1 : 0;
   }
 
   public flyTo(target: number) {

@@ -5,6 +5,7 @@
   interface Props {
     activeFilter?: string | null;
     isDrawerOpen?: boolean;
+    isSectionModalOpen?: boolean;
     onHover?: (item: ArchiveItem | null, pos?: { x: number; y: number }) => void;
     onSelect?: (item: ArchiveItem) => void;
     onDistChange?: (dist: number, activeItem?: ArchiveItem | null) => void;
@@ -14,6 +15,7 @@
   let {
     activeFilter = null,
     isDrawerOpen = false,
+    isSectionModalOpen = false,
     onHover,
     onSelect,
     onDistChange,
@@ -54,6 +56,12 @@
   $effect(() => {
     if (engine) {
       engine.setSoft(isDrawerOpen);
+    }
+  });
+
+  $effect(() => {
+    if (engine) {
+      engine.setSectionModalOpen(isSectionModalOpen);
     }
   });
 

@@ -22,7 +22,7 @@
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-4 sm:pb-8">
       <div class="max-w-md pointer-events-auto">
         <p class="font-body text-sm sm:text-base text-[#d4d4d8] leading-relaxed">
-          Reflexiones visuales, cine, arte y filosofía. Un archivo de obras y debates que desafían el ruido contemporáneo. Haz scroll para adentrarte en la cueva.
+          Explora los gustos y disgustos, recomendaciones, reflexiones y todo aquello que he considerado valioso para compartir. Haz scroll para adentrarte en mi cueva.
         </p>
       </div>
 
