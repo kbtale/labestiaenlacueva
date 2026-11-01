@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { inject } from '@vercel/analytics';
   import VaultLoader from './lib/VaultLoader.svelte';
   import VaultCanvas from './lib/VaultCanvas.svelte';
   import VaultNav from './lib/VaultNav.svelte';
@@ -6,6 +8,10 @@
   import VaultHud from './lib/VaultHud.svelte';
   import VaultPlayer from './lib/VaultPlayer.svelte';
   import type { ArchiveItem } from './lib/VaultEngine';
+
+  onMount(() => {
+    inject();
+  });
 
   let canvasComponent: { flyTo: (target: number) => void; rewindToStart: () => void; startIntro: () => void } | null = $state(null);
   let activeFilter = $state<string | null>(null);
