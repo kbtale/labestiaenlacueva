@@ -1,35 +1,98 @@
 <script lang="ts">
-  import Navbar from './lib/Navbar.svelte';
-  import Hero from './lib/Hero.svelte';
-  import YoutubePlaylist from './lib/YoutubePlaylist.svelte';
-  import TiktokGrid from './lib/TiktokGrid.svelte';
-  import ProjectsGrid from './lib/ProjectsGrid.svelte';
-  import Contact from './lib/Contact.svelte';
-  import { getLang, translations } from './lib/i18n.svelte';
+  import VaultLoader from './lib/VaultLoader.svelte';
+  import VaultCanvas from './lib/VaultCanvas.svelte';
+  import VaultNav from './lib/VaultNav.svelte';
+  import VaultHero from './lib/VaultHero.svelte';
+  import VaultHud from './lib/VaultHud.svelte';
+  import VaultPlayer from './lib/VaultPlayer.svelte';
+  import type { ArchiveItem } from './lib/VaultEngine';
 
-  let lang = $derived(getLang());
-  let t = $derived(translations[lang]);
+  let canvasComponent: { flyTo: (target: number) => void; rewindToStart: () => void; startIntro: () => void } | null = $state(null);
+  let activeFilter = $state<string | null>(null);
+  let hoveredItem = $state<ArchiveItem | null>(null);
+  let hoveredPos = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+  let activeRunwayItem = $state<ArchiveItem | null>(null);
+  let selectedItem = $state<ArchiveItem | null>(null);
+  let currentDist = $state(0);
+  let loadProgress = $state(0.05);
+  let isSectionModalOpen = $state(false);
+
+  function handleFilterChange(filter: string | null) {
+    activeFilter = filter;
+  }
+
+  function handleHover(item: ArchiveItem | null, pos?: { x: number; y: number }) {
+    hoveredItem = item;
+    if (pos) hoveredPos = pos;
+  }
+
+  function handleSelect(item: ArchiveItem) {
+    selectedItem = item;
+  }
+
+  function handleClosePlayer() {
+    selectedItem = null;
+  }
+
+  function handleDistChange(dist: number, activeItem?: ArchiveItem | null) {
+    currentDist = dist;
+    if (activeItem !== undefined) activeRunwayItem = activeItem;
+  }
+
+  function handleProgress(p: number) {
+    loadProgress = Math.max(loadProgress, p);
+  }
+
+  function handleRewind() {
+    canvasComponent?.rewindToStart();
+  }
+
+  function handleExplore() {
+    canvasComponent?.flyTo(380);
+  }
 </script>
 
-<div class="min-h-screen bg-white dark:bg-mono-950 text-mono-950 dark:text-mono-50 transition-colors duration-200">
-  <Navbar />
-  
-  <main class="w-full">
-    <Hero />
-    <YoutubePlaylist />
-    <TiktokGrid />
-    <ProjectsGrid />
-    <Contact />
-  </main>
+<div class="relative w-screen h-screen overflow-hidden bg-[#0a0a0b] text-[#ededed]">
+  <VaultLoader
+    progress={loadProgress}
+    onStartIntro={() => canvasComponent?.startIntro()}
+  />
 
-  <footer class="py-12 px-6 sm:px-12 border-t border-mono-200 dark:border-mono-800 bg-mono-50 dark:bg-mono-950 text-mono-600 dark:text-mono-400 text-xs">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-      <span class="tracking-wider uppercase font-mono text-[11px] font-medium text-mono-700 dark:text-mono-300">
-        © 2026 LA BESTIA EN LA CUEVA. {t.footer.rights}
-      </span>
-      <span class="font-mono text-[11px] uppercase tracking-widest text-mono-500 dark:text-mono-400">
-        {t.footer.stack}
-      </span>
-    </div>
-  </footer>
+  <VaultCanvas
+    bind:this={canvasComponent}
+    {activeFilter}
+    isDrawerOpen={selectedItem !== null}
+    {isSectionModalOpen}
+    onHover={handleHover}
+    onSelect={handleSelect}
+    onDistChange={handleDistChange}
+    onProgress={handleProgress}
+  />
+
+  <VaultNav
+    {activeFilter}
+    dist={currentDist}
+    onFilterChange={handleFilterChange}
+    onRewind={handleRewind}
+    onExplore={handleExplore}
+    onSelectVideo={handleSelect}
+    onModalChange={(open) => isSectionModalOpen = open}
+  />
+
+  <VaultHero
+    dist={currentDist}
+    onExplore={handleExplore}
+  />
+
+  <VaultHud
+    {hoveredItem}
+    mousePos={hoveredPos}
+    {activeRunwayItem}
+    dist={currentDist}
+  />
+
+  <VaultPlayer
+    {selectedItem}
+    onClose={handleClosePlayer}
+  />
 </div>
