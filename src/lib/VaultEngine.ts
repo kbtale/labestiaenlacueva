@@ -469,10 +469,14 @@ export class VaultEngine {
         vec2 q = abs((vLocal - 0.5) * vec2(1.3333, 1.0)) - vec2(0.6667, 0.5) + 0.06;
         if (length(max(q, 0.0)) > 0.06) discard;
         vec3 c = texture2D(uMap, vUv, vBias).rgb;
-        c = clamp(c + (vColor - vMean) * (uShift * 0.35), 0.0, 1.0);
-        float lum = dot(c, vec3(0.299, 0.587, 0.114));
-        c = mix(vec3(lum), c, 1.35);
-        c = mix(uBg, c, vDim);
+        float lPortrait = dot(vColor, vec3(0.299, 0.587, 0.114));
+        float lThumb = max(0.08, dot(c, vec3(0.299, 0.587, 0.114)));
+        float contrastLight = pow(clamp(lPortrait * 1.35, 0.0, 1.0), 1.45);
+        vec3 cVivid = c * (contrastLight / lThumb);
+        vec3 cShifted = clamp(c + (vColor - vMean), 0.0, 1.0);
+        c = mix(cShifted, cVivid, 0.45);
+        c = clamp(c * (0.35 + 1.15 * contrastLight), 0.0, 1.0);
+        c = mix(uBg, c, vDim * smoothstep(0.04, 0.22, lPortrait));
         c = mix(c * 0.15, c, vFilterDim);
         float edge = min(min(vLocal.x, 1.0 - vLocal.x), min(vLocal.y, 1.0 - vLocal.y));
         if (vHover > 0.5) {
@@ -657,7 +661,10 @@ export class VaultEngine {
 
     let itemIdx: number;
     if (epoch === 0) {
-      itemIdx = this.data!.cells[i][0] % this.data!.entries.length;
+      const col = this.data!.cells[i][5];
+      const row = this.data!.cells[i][6];
+      const h = (i * 1013904223 + col * 1664525 + row * 214013 + 37) >>> 0;
+      itemIdx = h % this.data!.entries.length;
     } else if (!this.world[i].h) {
       itemIdx = -1;
     } else {
