@@ -5,6 +5,7 @@
     subtitle?: string;
     maxWidth?: string;
     onClose: () => void;
+    onCloseStart?: () => void;
     header?: import('svelte').Snippet;
     children?: import('svelte').Snippet;
   }
@@ -15,6 +16,7 @@
     subtitle = '',
     maxWidth = 'max-w-lg',
     onClose,
+    onCloseStart,
     header,
     children
   }: Props = $props();
@@ -38,10 +40,11 @@
   });
 
   function handleClose() {
+    onCloseStart?.();
     isOpen = false;
     setTimeout(() => {
       onClose();
-    }, 320);
+    }, 280);
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -62,7 +65,7 @@
       type="button"
       onclick={handleClose}
       aria-label="Cerrar modal"
-      class="vault-drawer-backdrop fixed inset-0 w-full h-full bg-black/70 backdrop-blur-md cursor-default border-0 transition-opacity duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}"
+      class="vault-drawer-backdrop fixed inset-0 w-full h-full bg-transparent cursor-default border-0 {isOpen ? 'pointer-events-auto' : 'pointer-events-none'}"
     ></button>
 
     <div
@@ -78,7 +81,7 @@
         {:else if title || subtitle}
           <div class="flex flex-col min-w-0">
             {#if title}
-              <span class="font-ui text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
+              <span class="font-ui text-sm sm:text-base font-medium text-white/95 tracking-normal">
                 {title}
               </span>
             {/if}

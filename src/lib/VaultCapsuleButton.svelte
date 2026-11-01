@@ -218,15 +218,12 @@
     border-radius: 9999px;
     background: #ffffff;
     pointer-events: none;
-    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.16);
-    transition: width 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.35s ease;
+    transition: width 0.42s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .vault-capsule-button:hover .vault-capsule-backdrop,
   .vault-capsule-button.hovered .vault-capsule-backdrop {
     width: 34px;
-    box-shadow: 0 0 24px rgba(255, 255, 255, 0.45);
   }
 
   .vault-capsule-label {

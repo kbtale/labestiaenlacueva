@@ -223,7 +223,7 @@ export class VaultEngine {
     });
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(this.dpr);
-    this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 8000);
@@ -469,7 +469,9 @@ export class VaultEngine {
         vec2 q = abs((vLocal - 0.5) * vec2(1.3333, 1.0)) - vec2(0.6667, 0.5) + 0.06;
         if (length(max(q, 0.0)) > 0.06) discard;
         vec3 c = texture2D(uMap, vUv, vBias).rgb;
-        c = clamp(c + (vColor - vMean) * uShift, 0.0, 1.0);
+        c = clamp(c + (vColor - vMean) * (uShift * 0.35), 0.0, 1.0);
+        float lum = dot(c, vec3(0.299, 0.587, 0.114));
+        c = mix(vec3(lum), c, 1.35);
         c = mix(uBg, c, vDim);
         c = mix(c * 0.15, c, vFilterDim);
         float edge = min(min(vLocal.x, 1.0 - vLocal.x), min(vLocal.y, 1.0 - vLocal.y));
@@ -777,7 +779,7 @@ export class VaultEngine {
       target.cx = this.W * 0.47;
     }
 
-    const k = this.fr.ready ? 1 - Math.exp(-dt * 5) : 1;
+    const k = this.fr.ready ? 1 - Math.exp(-dt * 9.5) : 1;
     this.fr.cx += (target.cx - this.fr.cx) * k;
     this.fr.cy += (target.cy - this.fr.cy) * k;
     this.fr.w += (target.w - this.fr.w) * k;

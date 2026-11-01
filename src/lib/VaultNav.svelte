@@ -100,6 +100,11 @@
       url: 'https://www.youtube.com/@LaBestiaenlaCueva'
     },
     {
+      name: 'GitHub',
+      handle: 'kbtale',
+      url: 'https://github.com/kbtale'
+    },
+    {
       name: 'Discord',
       handle: 'La Cueva / Términus',
       url: 'https://discord.gg/terminus'
@@ -175,7 +180,7 @@
     <button
       type="button"
       onclick={toggleDropdown}
-      class="vault-dropdown-trigger group relative flex items-center justify-between gap-3 h-10 sm:h-11 pl-5 pr-2 rounded-full bg-white text-black font-ui text-xs sm:text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer border-0"
+      class="vault-dropdown-trigger group relative flex items-center justify-between gap-3 h-10 sm:h-11 pl-5 pr-2 rounded-full bg-white text-black font-ui text-xs sm:text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer border-0"
       aria-haspopup="listbox"
       aria-expanded={isDropdownOpen}
     >
@@ -217,6 +222,7 @@
   open={activeModal === 'sections'}
   maxWidth="max-w-2xl"
   onClose={() => { activeModal = null; closeDropdown(); }}
+  onCloseStart={() => onModalChange?.(false)}
   header={sectionsHeader}
 >
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -252,6 +258,7 @@
   title="Sobre mí"
   maxWidth="max-w-xl"
   onClose={() => activeModal = null}
+  onCloseStart={() => onModalChange?.(false)}
 >
   <div class="space-y-4 font-ui text-xs sm:text-sm text-neutral-300 leading-relaxed">
     <p class="font-body text-sm sm:text-base text-neutral-200 leading-relaxed">
@@ -278,10 +285,11 @@
   open={activeModal === 'socials'}
   title="Mis redes"
   onClose={() => activeModal = null}
+  onCloseStart={() => onModalChange?.(false)}
 >
-  <div class="flex flex-col gap-2 py-1">
+  <div class="flex flex-col gap-2.5 py-1">
     {#each socials as soc}
-      <div class="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
+      <div class="flex items-center justify-between py-1">
         <VaultKineticButton
           label={`${soc.name} (${soc.handle})`}
           icon="external"
@@ -297,6 +305,7 @@
   open={activeModal === 'contact'}
   title="Contacto"
   onClose={() => activeModal = null}
+  onCloseStart={() => onModalChange?.(false)}
 >
   <form
     onsubmit={(e) => {
