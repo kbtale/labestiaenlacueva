@@ -468,15 +468,17 @@ export class VaultEngine {
         if (a < 0.999 && ign(gl_FragCoord.xy) > a) discard;
         vec2 q = abs((vLocal - 0.5) * vec2(1.3333, 1.0)) - vec2(0.6667, 0.5) + 0.06;
         if (length(max(q, 0.0)) > 0.06) discard;
-        vec3 c = texture2D(uMap, vUv, vBias).rgb;
+        vec3 cRaw = texture2D(uMap, vUv, vBias).rgb;
         float lPortrait = dot(vColor, vec3(0.299, 0.587, 0.114));
-        float lThumb = max(0.08, dot(c, vec3(0.299, 0.587, 0.114)));
+        float lThumb = max(0.08, dot(cRaw, vec3(0.299, 0.587, 0.114)));
         float contrastLight = pow(clamp(lPortrait * 1.35, 0.0, 1.0), 1.45);
-        vec3 cVivid = c * (contrastLight / lThumb);
-        vec3 cShifted = clamp(c + (vColor - vMean), 0.0, 1.0);
-        c = mix(cShifted, cVivid, 0.45);
-        c = clamp(c * (0.35 + 1.15 * contrastLight), 0.0, 1.0);
-        c = mix(uBg, c, vDim * smoothstep(0.04, 0.22, lPortrait));
+        vec3 cVivid = cRaw * (contrastLight / lThumb);
+        vec3 cShifted = clamp(cRaw + (vColor - vMean), 0.0, 1.0);
+        vec3 cPortrait = mix(cShifted, cVivid, 0.45);
+        cPortrait = clamp(cPortrait * (0.35 + 1.15 * contrastLight), 0.0, 1.0);
+        cPortrait = mix(uBg, cPortrait, smoothstep(0.04, 0.22, lPortrait));
+        vec3 c = mix(cRaw, cPortrait, uShift);
+        c = mix(uBg, c, mix(vDim, 1.0, uFog));
         c = mix(c * 0.15, c, vFilterDim);
         float edge = min(min(vLocal.x, 1.0 - vLocal.x), min(vLocal.y, 1.0 - vLocal.y));
         if (vHover > 0.5) {
@@ -1203,7 +1205,7 @@ export class VaultEngine {
     this.drift.x += (this.mouseNorm.x - this.drift.x) * (1 - Math.exp(-dt * 1.5));
     this.drift.y += (this.mouseNorm.y - this.drift.y) * (1 - Math.exp(-dt * 1.5));
 
-    const away = Math.min(1, this.dist / 120);
+    const away = Math.min(1, this.dist / 70);
     const ease = away * away * (3 - 2 * away);
     this.uniforms.uShift.value = 1.0 * (1 - ease);
     this.uniforms.uFog.value = ease;
