@@ -22,19 +22,19 @@
     const frame = (now: number) => {
       const dt = Math.min(0.25, (now - last) / 1000);
       last = now;
-      const pace = Math.min(1, (now - t0) / 2200);
+      const pace = Math.min(1, (now - t0) / 1450);
       const goal = Math.min(Math.max(progress, 0.05), pace);
 
-      shown += (goal - shown) * (1 - Math.exp(-dt * 6.0));
+      shown += (goal - shown) * (1 - Math.exp(-dt * 9.0));
 
-      if (pace >= 1 && (shown > 0.985 || (now - t0) > 2600)) {
+      if (pace >= 1 && (shown > 0.985 || (now - t0) > 1700)) {
         shown = 1;
         isFading = true;
         onStartIntro?.();
         setTimeout(() => {
           isDone = true;
           onComplete?.();
-        }, 500);
+        }, 400);
         return;
       }
 
