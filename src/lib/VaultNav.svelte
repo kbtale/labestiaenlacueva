@@ -1,22 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import VaultRollLink from './VaultRollLink.svelte';
-  import VaultDrawer from './VaultDrawer.svelte';
   import VaultCapsuleButton from './VaultCapsuleButton.svelte';
+  import VaultDrawer from './VaultDrawer.svelte';
   import type { ArchiveItem } from './VaultEngine';
 
   interface Props {
-    activeFilter: string | null;
-    onFilterChange: (filter: string | null) => void;
+    activeFilter?: string | null;
     dist?: number;
+    onFilterChange?: (filter: string | null) => void;
     onRewind?: () => void;
     onExplore?: () => void;
-    onSelectVideo?: (item: ArchiveItem) => void;
+    onSelectVideo?: (video: ArchiveItem) => void;
   }
 
   let {
-    activeFilter,
-    onFilterChange,
+    activeFilter = null,
     dist = 0,
     onRewind,
     onExplore,
@@ -26,6 +25,7 @@
   let activeModal = $state<'about' | 'socials' | 'contact' | 'sections' | null>(null);
   let archiveItems = $state<ArchiveItem[]>([]);
   let selectedSection = $state<string>('Vídeos que Pondría en un Museo');
+  let isDropdownOpen = $state(false);
 
   const isAtRest = $derived(dist < 30);
 
@@ -47,7 +47,6 @@
   });
 
   function pickVideo(video: ArchiveItem) {
-    activeModal = null;
     onSelectVideo?.(video);
   }
 
@@ -60,7 +59,7 @@
     },
     {
       name: 'Discord',
-      handle: 'Comunidad Terminus',
+      handle: 'La Cueva / Términus',
       url: 'https://discord.gg/terminus',
       svg: '<path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>'
     },
@@ -68,22 +67,39 @@
       name: 'TikTok',
       handle: '@labestiaenlacueva',
       url: 'https://www.tiktok.com/@labestiaenlacueva',
-      svg: '<path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>'
+      svg: '<path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 2.89 3.5 2.75 1.04-.04 2.02-.59 2.59-1.45.45-.64.63-1.43.62-2.22l.03-17.71z"/>'
     },
     {
       name: 'Kick',
       handle: 'bestiaelc',
       url: 'https://kick.com/bestiaelc',
-      svg: '<path d="M1.333 0v24h5.333v-6.667h2.667L14.667 24h6.666l-7.333-9.333L21.333 0h-6.666l-5.334 7.333H6.667V0H1.333z"/>'
+      svg: '<path d="M1.333 0h8v5.333h2.667V2.667h2.667V0h8v8h-2.667v2.667h-2.667v2.666h2.667V16h2.667v8h-8v-2.667h-2.667v-2.666H9.333V24h-8V0zm8 8h-2.666v8h2.666V8z"/>'
     },
     {
       name: 'Threads',
       handle: '@carlosblacueva',
       url: 'https://www.threads.net/@carlosblacueva',
-      svg: '<path d="M12.186 24c-.007 0-.014 0-.02 0-3.278-.016-6.008-1.17-8.113-3.428-2.065-2.214-3.16-5.184-3.167-8.587-.008-3.425 1.082-6.402 3.151-8.608C6.143 1.129 8.877-.016 12.183 0h.015c3.315.016 6.042 1.159 8.106 3.398 2.066 2.241 3.157 5.228 3.155 8.635v.068c-.008 1.488-.25 2.91-.718 4.228-.62 1.745-1.579 3.208-2.85 4.348-1.554 1.393-3.52 2.128-5.845 2.184-.047 0-.094 0-.142 0-2.274 0-4.24-.717-5.688-2.072-1.392-1.303-2.182-3.07-2.285-5.111l-.004-.153c0-2.08.775-3.87 2.241-5.176 1.408-1.254 3.342-1.944 5.592-1.996h.224c1.688 0 3.22.42 4.432 1.214.398.261.642.7.653 1.176.012.476-.21.928-.593 1.21-.692.51-1.555.263-2.38.077-.665-.15-1.424-.226-2.235-.226-1.545.036-2.856.495-3.791 1.328-.888.791-1.365 1.884-1.343 3.078.066 1.314.577 2.454 1.478 3.297.986.922 2.378 1.398 4.025 1.376 1.637-.04 3.018-.54 4.103-1.488.94-.821 1.62-1.897 2.022-3.197.352-.988.533-2.057.538-3.178.002-2.73-.839-5.1-2.433-6.852-1.646-1.808-3.864-2.73-6.59-2.743h-.012c-2.716.013-4.93 1.05-6.574 3.08-1.603 1.979-2.443 4.606-2.436 7.6.006 2.973.856 5.584 2.457 7.55 1.638 2.012 3.844 3.036 6.556 3.049h.016c2.25-.01 4.22-.72 5.67-2.07 1.4-1.31 2.19-3.08 2.29-5.13l.01-.15c0-2.09-.77-3.88-2.24-5.19-1.41-1.25-3.34-1.94-5.59-2H12.186z"/>'
+      svg: '<path d="M12.186 24h-.007C5.46 23.978 0 18.675 0 12.176 0 5.428 5.46.022 12.179.022c6.498 0 11.821 5.406 11.821 12.154 0 4.195-2.062 7.742-5.518 9.489-.522.264-1.157.05-1.421-.472-.264-.523-.051-1.158.471-1.422 2.87-1.45 4.584-4.385 4.584-7.85 0-5.66-4.46-10.27-9.937-10.27-5.66 0-10.27 4.46-10.27 9.937 0 5.66 4.46 10.27 9.937 10.27.18 0 .36-.005.54-.015 1.583-.086 2.984-.71 3.948-1.758.125-.137.234-.282.327-.433.094.045.188.09.283.132.483.213.722.766.509 1.25-.213.483-.766.721-1.25.508-.184-.082-.366-.172-.544-.27-.887.892-2.096 1.458-3.483 1.57-.282.023-.567.034-.852.034z"/>'
     }
   ];
 </script>
+
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === 'Escape' && isDropdownOpen) {
+      isDropdownOpen = false;
+      e.stopPropagation();
+    }
+  }}
+  onclick={(e) => {
+    if (isDropdownOpen) {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest('.vault-dropdown-container')) {
+        isDropdownOpen = false;
+      }
+    }
+  }}
+/>
 
 <header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-center min-h-[72px] sm:min-h-[80px]">
   <nav
@@ -116,51 +132,86 @@
   />
 </div>
 
+{#snippet sectionsHeader()}
+  <div class="relative vault-dropdown-container">
+    <button
+      type="button"
+      onclick={() => (isDropdownOpen = !isDropdownOpen)}
+      class="vault-dropdown-trigger flex items-center gap-3 pl-4 pr-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-white/25 text-white transition-all duration-300 group cursor-pointer"
+      aria-haspopup="listbox"
+      aria-expanded={isDropdownOpen}
+    >
+      <span class="flex items-center gap-2 min-w-0">
+        <span class="w-1.5 h-1.5 rounded-full bg-white/80 group-hover:scale-125 transition-transform shrink-0"></span>
+        <span class="font-ui text-xs font-medium text-white/95 max-w-[210px] sm:max-w-[340px] truncate">
+          {selectedSection}
+        </span>
+      </span>
+      <span class="w-6 h-6 rounded-full bg-white/10 group-hover:bg-white/20 text-white/80 group-hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 {isDropdownOpen ? 'rotate-180 bg-white text-black group-hover:bg-white group-hover:text-black' : ''}">
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </span>
+    </button>
+
+    {#if isDropdownOpen}
+      <div
+        class="absolute left-0 top-[calc(100%+8px)] w-72 sm:w-88 bg-[#0d0e13]/98 backdrop-blur-2xl rounded-2xl p-1.5 border border-white/15 shadow-2xl z-30 flex flex-col gap-1 transition-all duration-200"
+        role="listbox"
+      >
+        {#each sectionKeys as key}
+          <button
+            type="button"
+            onclick={() => { selectedSection = key; isDropdownOpen = false; }}
+            role="option"
+            aria-selected={selectedSection === key}
+            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-ui text-xs transition-all duration-200 border-0 cursor-pointer {selectedSection === key ? 'bg-white text-black font-semibold shadow-sm' : 'text-neutral-300 hover:bg-white/10 hover:text-white font-medium'}"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 {selectedSection === key ? 'bg-black' : 'bg-white/30'}"></span>
+              <span class="truncate">{key}</span>
+            </div>
+            <span class="font-ui text-[11px] {selectedSection === key ? 'text-black/70' : 'text-neutral-400'} shrink-0 ml-3">
+              {archiveItems.filter(v => v.playlist === key).length}
+            </span>
+          </button>
+        {/each}
+      </div>
+    {/if}
+  </div>
+{/snippet}
+
 <VaultDrawer
   open={activeModal === 'sections'}
-  title=""
   maxWidth="max-w-2xl"
-  onClose={() => activeModal = null}
+  onClose={() => { activeModal = null; isDropdownOpen = false; }}
+  header={sectionsHeader}
 >
-  <div class="space-y-6">
-    <div class="flex flex-wrap gap-2 pb-3 border-b border-white/5">
-      {#each sectionKeys as key}
-        <button
-          type="button"
-          onclick={() => selectedSection = key}
-          class="px-4 py-2 rounded-full text-xs font-ui transition-all duration-200 border-0 cursor-pointer {selectedSection === key ? 'bg-white text-black font-semibold' : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 font-medium'}"
-        >
-          {key}
-        </button>
-      {/each}
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1 overscroll-contain">
-      {#each filteredVideos as v}
-        <button
-          type="button"
-          onclick={() => pickVideo(v)}
-          class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left border border-white/5 hover:border-white/20 group cursor-pointer"
-        >
-          <img
-            src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
-            alt={v.title}
-            class="w-20 h-13 object-cover rounded-md shrink-0 bg-black/50"
-            loading="lazy"
-          />
-          <div class="flex flex-col min-w-0">
-            <span class="font-ui text-xs font-medium text-white line-clamp-2 leading-snug group-hover:text-white">
-              {v.title}
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+    {#each filteredVideos as v}
+      <button
+        type="button"
+        onclick={() => pickVideo(v)}
+        class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left border border-white/5 hover:border-white/20 group cursor-pointer"
+      >
+        <img
+          src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+          alt={v.title}
+          class="w-20 h-13 object-cover rounded-md shrink-0 bg-black/50"
+          loading="lazy"
+        />
+        <div class="flex flex-col min-w-0">
+          <span class="font-ui text-xs font-medium text-white line-clamp-2 leading-snug group-hover:text-white">
+            {v.title}
+          </span>
+          {#if v.tags && v.tags.length > 0}
+            <span class="font-ui text-[10px] text-neutral-400 mt-1">
+              #{v.tags[0]}
             </span>
-            {#if v.tags && v.tags.length > 0}
-              <span class="font-ui text-[10px] text-neutral-400 mt-1">
-                #{v.tags[0]}
-              </span>
-            {/if}
-          </div>
-        </button>
-      {/each}
-    </div>
+          {/if}
+        </div>
+      </button>
+    {/each}
   </div>
 </VaultDrawer>
 
@@ -178,34 +229,42 @@
     </p>
     <div class="p-4 rounded-xl bg-white/5 space-y-2 border border-white/5">
       <div class="text-[11px] uppercase tracking-widest text-neutral-400 font-ui font-semibold">Colecciones Principales</div>
-      <div class="text-white font-ui text-xs">1. Vídeos que Pondría en un Museo</div>
-      <div class="text-white font-ui text-xs">2. Vídeos de los que todos deberíamos estar hablando</div>
+      <ul class="list-disc list-inside space-y-1 text-neutral-300">
+        <li>Vídeos que Pondría en un Museo — Piezas selectas de trascendencia visual y conceptual.</li>
+        <li>Vídeos de los que todos deberíamos estar hablando — Debates y obras contemporáneas urgentes.</li>
+      </ul>
     </div>
   </div>
 </VaultDrawer>
 
 <VaultDrawer
   open={activeModal === 'socials'}
-  title="Mis Redes Oficiales"
+  title="Redes y Comunidad"
   onClose={() => activeModal = null}
 >
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    {#each socials as s}
+  <div class="grid grid-cols-1 gap-2.5 font-ui">
+    {#each socials as soc}
       <a
-        href={s.url}
+        href={soc.url}
         target="_blank"
         rel="noopener noreferrer"
-        class="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-neutral-200 hover:text-white group border border-white/5"
+        class="flex items-center justify-between p-3.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 text-neutral-200 hover:text-white group"
       >
-        <span class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-            {@html s.svg}
-          </svg>
-        </span>
-        <span class="flex flex-col">
-          <span class="font-ui text-xs font-semibold text-white">{s.name}</span>
-          <span class="font-ui text-[10px] text-neutral-400">{s.handle}</span>
-        </span>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/80 group-hover:text-white">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              {@html soc.svg}
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-white">{soc.name}</div>
+            <div class="text-[11px] text-neutral-400">{soc.handle}</div>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="7" y1="17" x2="17" y2="7"></line>
+          <polyline points="7 7 17 7 17 17"></polyline>
+        </svg>
       </a>
     {/each}
   </div>

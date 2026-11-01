@@ -807,13 +807,52 @@ export class VaultEngine {
     this.targetDist = Math.max(0, this.targetDist + dy);
   }
 
+  private isEventInsideModal(e: Event): boolean {
+    const path = e.composedPath ? e.composedPath() : [];
+    for (const el of path) {
+      if (el instanceof HTMLElement) {
+        if (
+          el.classList.contains('vault-drawer-card') ||
+          el.classList.contains('vault-drawer-overlay') ||
+          el.classList.contains('vault-drawer-body') ||
+          el.classList.contains('vault-scrollable') ||
+          el.classList.contains('vault-player-panel') ||
+          el.getAttribute('role') === 'dialog' ||
+          el.tagName === 'ASIDE'
+        ) {
+          return true;
+        }
+      }
+    }
+    const target = e.target as HTMLElement | null;
+    return !!target?.closest?.('.vault-drawer-card, .vault-drawer-overlay, .vault-drawer-body, .vault-scrollable, .vault-player-panel, [role="dialog"], aside');
+  }
+
+  private isModalOpen(): boolean {
+    const dialog = document.querySelector('.vault-drawer-card:not(.opacity-0), [role="dialog"]:not(.opacity-0)');
+    if (dialog) return true;
+    const player = document.querySelector('.vault-player-panel:not(.translate-x-full)');
+    if (player) return true;
+    return false;
+  }
+
   private handleWheel(e: WheelEvent) {
+    if (this.isEventInsideModal(e)) {
+      return;
+    }
+    if (this.isModalOpen()) {
+      e.preventDefault();
+      return;
+    }
     e.preventDefault();
     const mult = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? this.H : 1;
     this.pushDelta(e.deltaY * mult * 0.22);
   }
 
   private handlePointerDown(e: PointerEvent) {
+    if (this.isEventInsideModal(e) || this.isModalOpen()) {
+      return;
+    }
     this.isInteracting = true;
     this.pointerDownPos = { x: e.clientX, y: e.clientY, time: performance.now() };
     this.pointerCurrentPos = { x: e.clientX, y: e.clientY, inCanvas: e.target === this.canvas };

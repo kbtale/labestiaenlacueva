@@ -37,6 +37,7 @@
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && isOpen) {
+      e.stopPropagation();
       handleClose();
     }
   }
@@ -57,7 +58,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if activeItem}
-  <div class="fixed inset-0 z-40 flex justify-end pointer-events-none">
+  <div class="fixed inset-0 z-[65] flex justify-end pointer-events-none">
     <button
       type="button"
       onclick={handleClose}
@@ -66,7 +67,7 @@
     ></button>
 
     <aside
-      class="relative z-50 w-full sm:w-[580px] h-full bg-[#0d0e12]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col justify-between overflow-y-auto transition-transform duration-450 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'}"
+      class="vault-player-panel relative z-[70] w-full sm:w-[580px] h-full bg-[#0d0e12]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col justify-between overflow-y-auto transition-transform duration-450 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'}"
     >
       <div>
         <div class="flex items-center justify-between px-6 py-5 border-b border-white/10">

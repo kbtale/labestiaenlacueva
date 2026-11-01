@@ -5,6 +5,7 @@
     subtitle?: string;
     maxWidth?: string;
     onClose: () => void;
+    header?: import('svelte').Snippet;
     children?: import('svelte').Snippet;
   }
 
@@ -14,6 +15,7 @@
     subtitle = '',
     maxWidth = 'max-w-lg',
     onClose,
+    header,
     children
   }: Props = $props();
 
@@ -44,6 +46,9 @@
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && isOpen) {
+      if (document.querySelector('.vault-player-panel')) {
+        return;
+      }
       handleClose();
     }
   }
@@ -63,22 +68,28 @@
     <div
       role="dialog"
       aria-modal="true"
-      class="vault-drawer-card relative z-10 w-full {maxWidth} bg-[#0c0d12]/98 rounded-2xl p-6 sm:p-8 border border-white/10 backdrop-blur-2xl flex flex-col gap-6 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 translate-y-3 pointer-events-none'}"
+      class="vault-drawer-card relative z-10 w-full {maxWidth} bg-[#0c0d12]/98 rounded-2xl p-5 sm:p-7 border border-white/10 backdrop-blur-2xl flex flex-col gap-5 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] {isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 translate-y-3 pointer-events-none'}"
     >
-      <div class="flex items-center justify-between pb-3 {title || subtitle ? 'border-b border-white/5' : ''}">
-        {#if title || subtitle}
-          <div class="flex flex-col">
+      <div class="flex items-center justify-between gap-4 pb-3.5 border-b border-white/5">
+        {#if header}
+          <div class="flex items-center min-w-0">
+            {@render header()}
+          </div>
+        {:else if title || subtitle}
+          <div class="flex flex-col min-w-0">
             {#if title}
               <span class="font-ui text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
                 {title}
               </span>
             {/if}
             {#if subtitle}
-              <span class="font-ui text-sm text-neutral-300 font-medium mt-0.5">
+              <span class="font-ui text-sm text-neutral-300 font-medium mt-0.5 truncate">
                 {subtitle}
               </span>
             {/if}
           </div>
+        {:else}
+          <div></div>
         {/if}
 
         <button
@@ -94,7 +105,7 @@
         </button>
       </div>
 
-      <div class="vault-drawer-body text-neutral-300 text-sm leading-relaxed max-h-[75vh] overflow-y-auto pr-1">
+      <div class="vault-drawer-body vault-scrollable text-neutral-300 text-sm leading-relaxed max-h-[68vh] overflow-y-auto overscroll-contain pr-1 scrollbar-thin [scrollbar-color:rgba(255,255,255,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
         {#if children}
           {@render children()}
         {/if}
