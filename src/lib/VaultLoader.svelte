@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import VaultCharacter from './VaultCharacter.svelte';
 
   interface Props {
     progress: number;
@@ -13,11 +14,7 @@
   let isDone = $state(false);
   let isFading = $state(false);
 
-  const ldEase = (x: number) =>
-    x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-
-  let s1 = $derived(ldEase(shown / 0.58));
-  let s2 = $derived(ldEase((shown - 0.44) / 0.56));
+  let fillPercentage = $derived(Math.min(100, Math.max(0, shown * 100)));
 
   onMount(() => {
     let t0 = performance.now();
@@ -58,35 +55,19 @@
   <div
     class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0b] transition-all duration-700 ease-out {isFading ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}"
   >
-    <div class="relative w-28 h-28 flex items-center justify-center">
-      <svg
-        class="w-full h-full text-white"
-        viewBox="0 0 100 100"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+    <div class="relative w-28 h-36 sm:w-32 sm:h-40 flex items-center justify-center">
+      <VaultCharacter class="w-full h-full text-white/15 transition-opacity" />
+
+      <div
+        class="absolute inset-0 flex items-center justify-center transition-all duration-75"
+        style="clip-path: inset({100 - fillPercentage}% 0 0 0);"
       >
-        <path
-          d="M 22 80 L 50 20 L 78 80"
-          pathLength="1"
-          stroke-dasharray="1"
-          stroke-dashoffset={Math.max(0, 1 - s1)}
-          class="transition-[stroke-dashoffset] duration-75"
-        />
-        <path
-          d="M 34 58 L 66 58"
-          pathLength="1"
-          stroke-dasharray="1"
-          stroke-dashoffset={Math.max(0, 1 - s2)}
-          class="transition-[stroke-dashoffset] duration-75"
-        />
-      </svg>
+        <VaultCharacter class="w-full h-full text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.45)]" />
+      </div>
     </div>
 
-    <div class="mt-4 flex flex-col items-center gap-1.5">
-      <span class="font-display text-2xl text-white/90 tracking-wide">
+    <div class="mt-6 flex flex-col items-center gap-1.5">
+      <span class="font-display text-2xl sm:text-3xl text-white/90 tracking-wide">
         La Bestia en la Cueva
       </span>
       <span class="font-ui text-[11px] tracking-widest uppercase text-white/40">
