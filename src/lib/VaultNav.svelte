@@ -69,50 +69,26 @@
   ];
 </script>
 
-<header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-between min-h-[72px] sm:min-h-[80px]">
-  <div class="pointer-events-auto flex items-center gap-3 min-w-[36px]"></div>
-
-  <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
-    <nav
-      class="vault-brand-menu pointer-events-auto flex items-center gap-6 sm:gap-9 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none absolute'}"
-    >
-      <VaultRollLink label="Mis secciones" onclick={onExplore} />
-      <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
-      <VaultRollLink label="Mis redes" onclick={() => activeModal = 'socials'} />
-      <VaultRollLink label="Contacto" onclick={() => activeModal = 'contact'} />
-    </nav>
-  </div>
-
-  <div class="pointer-events-auto hidden md:flex items-center gap-3">
-    {#each socials as s}
-      <a
-        href={s.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={s.name}
-        title={s.name}
-        class="vault-social-link p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-full transition-colors border-0 flex items-center justify-center"
-      >
-        <svg
-          class="w-4 h-4 fill-current"
-          viewBox="0 0 24 24"
-        >
-          {@html s.svg}
-        </svg>
-      </a>
-    {/each}
-  </div>
+<header class="vault-nav-header fixed top-0 left-0 right-0 z-30 pointer-events-none p-6 sm:p-8 flex items-center justify-center min-h-[72px] sm:min-h-[80px]">
+  <nav
+    class="vault-brand-menu pointer-events-auto flex items-center gap-6 sm:gap-9 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'}"
+  >
+    <VaultRollLink label="Mis secciones" onclick={onExplore} />
+    <VaultRollLink label="Sobre mí" onclick={() => activeModal = 'about'} />
+    <VaultRollLink label="Mis redes" onclick={() => activeModal = 'socials'} />
+    <VaultRollLink label="Contacto" onclick={() => activeModal = 'contact'} />
+  </nav>
 </header>
 
-{#if !isAtRest}
-  <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-auto flex items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-300">
-    <VaultCapsuleButton
-      label="Volver"
-      icon="rewind"
-      onclick={onRewind}
-    />
-  </div>
-{/if}
+<div
+  class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] {isAtRest ? 'opacity-0 translate-y-12 pointer-events-none' : 'opacity-100 translate-y-0 pointer-events-auto'}"
+>
+  <VaultCapsuleButton
+    label="Volver"
+    icon="rewind"
+    onclick={onRewind}
+  />
+</div>
 
 <VaultDrawer
   open={activeModal === 'about'}

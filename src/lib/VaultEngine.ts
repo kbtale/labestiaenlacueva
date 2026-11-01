@@ -141,7 +141,6 @@ export class VaultEngine {
   
   private N = 0;
   private totalCapacity = 0;
-  private stride = 2;
   private runwayK: Int32Array = new Int32Array(RUNWAY.n);
   private tileEpoch: Int32Array = new Int32Array(0);
   private tileItem: Int32Array = new Int32Array(0);
@@ -259,7 +258,7 @@ export class VaultEngine {
 
   private async loadAtlasTexture() {
     if (!this.data) return;
-    const isSmall = Math.min(window.innerWidth, window.innerHeight) * this.dpr < 1200;
+    const isSmall = Math.min(window.innerWidth, window.innerHeight) < 600 && this.dpr < 2;
     const src = isSmall ? '/atlas/archive-0-sm.webp' : '/atlas/archive-0.webp';
     const tileW = isSmall ? 128 : 256;
     const tileH = isSmall ? 96 : 192;
@@ -300,6 +299,11 @@ export class VaultEngine {
           gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
           gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, 1);
           gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, n - 1);
+          const ext = gl.getExtension("EXT_texture_filter_anisotropic");
+          if (ext) {
+            const maxAniso = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 4;
+            gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(maxAniso, 8));
+          }
           st.unbindTexture();
 
           const tex = new THREE.Texture();
@@ -356,6 +360,11 @@ export class VaultEngine {
 
     if (!job.list.length && job.isBaseLevel) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, 0);
+      const ext = gl.getExtension("EXT_texture_filter_anisotropic");
+      if (ext) {
+        const maxAniso = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 4;
+        gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(maxAniso, 8));
+      }
       this.sliceJobs.shift();
     }
     st.unbindTexture();
@@ -366,7 +375,6 @@ export class VaultEngine {
     const D = this.data;
     this.N = D.cells.length;
     this.totalCapacity = this.N + RUNWAY.n;
-    this.stride = Math.max(1, Math.ceil(this.N / (D.entries.length * 0.8)));
 
     this.tileEpoch = new Int32Array(this.totalCapacity).fill(-1);
     this.tileItem = new Int32Array(this.totalCapacity).fill(-1);
@@ -413,7 +421,7 @@ export class VaultEngine {
         vFade *= aRunway > 0.5 ? smoothstep(0.12, 0.65, uFog) : 1.0;
         vDepth = d;
         vLocal = uv;
-        vBias = uBlur * pow(smoothstep(45.0, 1150.0, d), 0.75) * 5.0 + uSoft * 0.6;
+        vBias = uBlur * pow(smoothstep(120.0, 1800.0, d), 1.2) * 2.2 + uSoft * 0.5;
         vec2 pad = 0.5 * exp2(vBias) / uTilePx + 0.002;
         vec2 inset = mix(pad, 1.0 - pad, uv);
         vUv = vec2((aSlot.x + inset.x) / uGrid.x, 1.0 - (aSlot.y + 1.0 - inset.y) / uGrid.y);
@@ -612,24 +620,36 @@ export class VaultEngine {
       this.attrDim.setX(i, c[9] === 1 ? 0 : (c[8] ?? 1));
       this.attrFill.setX(i, w.hideFly ? 1 : 0);
       this.attrCase.setX(i, 0);
-    } else if (i % this.stride !== 0) {
-      w.h = 0;
-      w.hideFly = false;
-      this.attrCase.setX(i, 0);
     } else {
-      const r = rng(i + 1, epoch);
-      const ang = r() * Math.PI * 2;
-      const rad = RUNWAY.rx + (VORTEX_RADIUS - RUNWAY.rx) * Math.pow(r(), 0.8);
-      w.h = 1.4 + Math.pow(r(), 2.2) * 7;
-      w.pos.set(
-        Math.cos(ang) * rad,
-        Math.sin(ang) * rad * 0.8,
-        -(d + epoch * CYCLE_PERIOD)
-      );
-      w.hideFly = false;
-      this.attrDim.setX(i, 1);
-      this.attrFill.setX(i, 0);
-      this.attrCase.setX(i, 0);
+      if (c[9] === 1) {
+        w.h0 = 0;
+        w.h = 0;
+        w.hideFly = true;
+        this.attrDim.setX(i, 0);
+        this.attrFill.setX(i, 1);
+        this.attrCase.setX(i, 0);
+      } else {
+        const r = rng(i + 1, epoch);
+        const k = (d + epoch * CYCLE_PERIOD) / D.D0;
+        const col = c[5];
+        const row = c[6];
+        const jx = (r() - 0.5) * 6.0 * k;
+        const jy = (r() - 0.5) * 6.0 * k;
+        w.pos.set(
+          (col + 0.5 - D.cols / 2) * D.cell[0] * k + jx,
+          (D.rows / 2 - row - 0.5) * D.cell[1] * k + jy,
+          -(d + epoch * CYCLE_PERIOD)
+        );
+        w.base.copy(w.pos);
+        w.h0 = D.cell[1] * k * 0.94;
+        w.hs = c[7] ?? (0.65 + r() * 0.7);
+        w.h = w.h0 * w.hs;
+        const inLane = Math.abs(w.pos.x) < RUNWAY.rx * 0.65 && Math.abs(w.pos.y) < RUNWAY.ry * 0.65;
+        w.hideFly = inLane;
+        this.attrDim.setX(i, c[8] ?? 1.0);
+        this.attrFill.setX(i, inLane ? 1 : 0);
+        this.attrCase.setX(i, 0);
+      }
     }
 
     this.vS.set(w.h, w.h, 1);
@@ -799,7 +819,7 @@ export class VaultEngine {
   private handleWheel(e: WheelEvent) {
     e.preventDefault();
     const mult = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? this.H : 1;
-    this.pushDelta(e.deltaY * mult * 0.55);
+    this.pushDelta(e.deltaY * mult * 0.22);
   }
 
   private handlePointerDown(e: PointerEvent) {
@@ -816,7 +836,7 @@ export class VaultEngine {
 
     if (this.isInteracting) {
       const now = performance.now();
-      const dy = (this.pointerDownPos.y - e.clientY) * 1.6;
+      const dy = (this.pointerDownPos.y - e.clientY) * 0.85;
       this.pushDelta(dy);
       const dt = Math.max(8, now - this.pointerDownPos.time);
       this.velocity = (dy / dt) * 16;
@@ -1112,9 +1132,9 @@ export class VaultEngine {
     } else {
       if (Math.abs(this.velocity) > 0.1) {
         this.pushDelta(this.velocity);
-        this.velocity *= Math.exp(-dt * 3.5);
+        this.velocity *= Math.exp(-dt * 4.2);
       }
-      this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 4));
+      this.dist += (this.targetDist - this.dist) * (1 - Math.exp(-dt * 2.8));
       if (Math.abs(this.targetDist - this.dist) < 0.01) {
         this.dist = this.targetDist;
       }
