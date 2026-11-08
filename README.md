@@ -2,6 +2,10 @@
 
 # La Bestia en la Cueva
 
+
+https://github.com/user-attachments/assets/ef294b9c-df82-4e36-b709-9b13252ea4f0
+
+
 **Sitio web y archivo de contenidos de La Bestia en la Cueva.**
 
 [Accede al sitio web aquí](https://www.labestiaenlacueva.com)
